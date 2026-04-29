@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+build
+.DS_Store
+.env*
+!.env.example
+*.log
+.vercel
+next-env.d.ts
+tsconfig.tsbuildinfo
+data/leads.csv
+data/bodyinstitut.db
+data/bodyinstitut.db-journal
+data/bodyinstitut.db-wal
+data/bodyinstitut.db-shm
