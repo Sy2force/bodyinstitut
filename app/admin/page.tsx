@@ -16,12 +16,53 @@ import {
   TrendingUp,
   Euro,
   Radio,
+  Trash2,
+  ShieldCheck,
+  AlertCircle,
+  MinusCircle,
 } from "lucide-react";
 import StatusPill from "@/components/admin/StatusPill";
 import LeadDrawer from "@/components/admin/LeadDrawer";
 import type { LeadRecord, LeadStatus } from "@/lib/types";
 
 const POLL_INTERVAL_MS = 10_000;
+
+/* ──────────── Lead qualification score ──────────── */
+
+type Quality = "qualifié" | "partiel" | "non_qualifié";
+
+function qualifyLead(r: LeadRecord): Quality {
+  let score = 0;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(r.email)) score++;
+  const fakes = ["test", "aaa", "xxx", "admin", "user", "fake", "essai"];
+  const fn = r.first_name.toLowerCase().trim();
+  const ln = r.last_name.toLowerCase().trim();
+  if (fn.length >= 2 && ln.length >= 2 && !fakes.some((f) => fn.includes(f) || ln.includes(f))) score++;
+  if (r.phone.replace(/\D/g, "").length >= 8) score++;
+  if (r.price_total && r.price_total > 0) score++;
+  if (r.consent === 1) score++;
+  if (score >= 4) return "qualifié";
+  if (score >= 2) return "partiel";
+  return "non_qualifié";
+}
+
+function QualityBadge({ quality }: { quality: Quality }) {
+  if (quality === "qualifié") return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+      <ShieldCheck className="h-3 w-3" /> Qualifié
+    </span>
+  );
+  if (quality === "partiel") return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+      <AlertCircle className="h-3 w-3" /> Partiel
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2 py-0.5 text-[10px] font-medium text-forest-700/55">
+      <MinusCircle className="h-3 w-3" /> Non qualifié
+    </span>
+  );
+}
 
 interface SimulatorStat {
   sid: string;
@@ -69,6 +110,7 @@ export default function AdminDashboard() {
   );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [activeLead, setActiveLead] = useState<LeadRecord | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Real-time polling
   const [isPolling, setIsPolling] = useState(true);
@@ -167,6 +209,7 @@ export default function AdminDashboard() {
     const res = await fetch(`/api/admin/leads/${id}`, { method: "DELETE" });
     if (res.ok) {
       setActiveLead(null);
+      setConfirmDeleteId(null);
       fetchLeads({ silent: true });
     }
   };
@@ -381,14 +424,16 @@ export default function AdminDashboard() {
                   <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Budget</th>
                   <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Soin</th>
                   <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55 text-right">Total</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Qualité</th>
                   <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55 text-right">Statut</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55 text-center">Suppr.</th>
                 </tr>
               </thead>
 
               {loading && (
                 <tbody>
                   <tr>
-                    <td colSpan={16} className="px-5 py-20 text-center text-forest-700/55">
+                    <td colSpan={18} className="px-5 py-20 text-center text-forest-700/55">
                       <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" />
                       Chargement...
                     </td>
@@ -399,7 +444,7 @@ export default function AdminDashboard() {
               {!loading && data && data.rows.length === 0 && (
                 <tbody>
                   <tr>
-                    <td colSpan={16} className="px-5 py-20 text-center">
+                    <td colSpan={18} className="px-5 py-20 text-center">
                       <Inbox className="mx-auto h-8 w-8 text-forest-700/25" />
                       <p className="mt-4 text-sm text-forest-700/65">
                         Aucun lead pour ces filtres.
@@ -459,6 +504,9 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </td>
+                        <td className="px-4 py-3">
+                          <QualityBadge quality={qualifyLead(r)} />
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {isNew && (
@@ -469,6 +517,31 @@ export default function AdminDashboard() {
                             <StatusPill status={r.status} />
                           </div>
                         </td>
+                        <td className="px-4 py-3 text-center">
+                          {confirmDeleteId === r.id ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); removeLead(r.id); }}
+                                className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-red-600"
+                              >
+                                Confirmer
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                className="rounded-full border border-surface-200 px-2 py-0.5 text-[10px] text-forest-700 hover:bg-surface-50"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(r.id); }}
+                              className="grid h-7 w-7 place-items-center rounded-full border border-surface-200 text-forest-700/40 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -478,6 +551,17 @@ export default function AdminDashboard() {
           </div>
 
           {/* Pagination */}
+          {data && data.total > 0 && (
+            <div className="flex items-center justify-between border-t border-surface-200 bg-surface-50 px-5 py-2 text-[11px] text-forest-700/55">
+              <span className="hidden sm:inline">
+                🟢 {data.rows.filter(r => qualifyLead(r) === "qualifié").length} qualifié{data.rows.filter(r => qualifyLead(r) === "qualifié").length > 1 ? "s" : ""}
+                &nbsp;·&nbsp;
+                🟡 {data.rows.filter(r => qualifyLead(r) === "partiel").length} partiel{data.rows.filter(r => qualifyLead(r) === "partiel").length > 1 ? "s" : ""}
+                &nbsp;·&nbsp;
+                ⚪ {data.rows.filter(r => qualifyLead(r) === "non_qualifié").length} non qualifié{data.rows.filter(r => qualifyLead(r) === "non_qualifié").length > 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
           {data && data.total > 0 && (
             <div className="flex items-center justify-between border-t border-surface-200 bg-surface-50 px-5 py-3 text-xs text-forest-700/65">
               <span>
