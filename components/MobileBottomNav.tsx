@@ -54,7 +54,7 @@ export default function MobileBottomNav() {
         <li className="flex justify-center">
           <Link
             href="#simulator"
-            aria-label="Commencer la simulation"
+            aria-label="Offre bilan"
             className="relative -mt-6 flex h-16 w-16 flex-col items-center justify-center rounded-full bg-brand-500 text-white shadow-brand-glow transition-all active:scale-95"
           >
             <Sparkles className="h-6 w-6" strokeWidth={2.2} />

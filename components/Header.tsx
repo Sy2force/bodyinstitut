@@ -7,7 +7,7 @@ import { Sparkles, ShieldCheck } from "lucide-react";
 
 const NAV = [
   { href: "#accueil", label: "Accueil", id: "accueil" },
-  { href: "#simulator", label: "Simulateur", id: "simulator", highlight: true },
+  { href: "#simulator", label: "Offre bilan", id: "simulator", highlight: true },
   { href: "#about", label: "À propos", id: "about" },
 ];
 

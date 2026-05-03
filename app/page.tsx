@@ -192,12 +192,12 @@ function Hero({ onStart }: { onStart: () => void }) {
               }}
             >
               <Sparkles className="h-5 w-5 transition-transform duration-500 group-hover:rotate-12" />
-              Commencer l'analyse
+              Offre bilan gratuit
               <ArrowUpRight className="h-5 w-5 transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </button>
 
             <p className="flex items-center gap-4 text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
-              <span>3 min</span>
+              <span>Analyse en 3 min</span>
               <span className="h-1 w-1 rounded-full bg-sand-500" />
               <span>Sans engagement</span>
               <span className="h-1 w-1 rounded-full bg-sand-500" />
