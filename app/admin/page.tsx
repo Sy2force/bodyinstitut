@@ -24,6 +24,7 @@ import {
 import StatusPill from "@/components/admin/StatusPill";
 import LeadDrawer from "@/components/admin/LeadDrawer";
 import type { LeadRecord, LeadStatus } from "@/lib/types";
+import type { LiveStats } from "@/lib/presence";
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -111,6 +112,7 @@ export default function AdminDashboard() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [activeLead, setActiveLead] = useState<LeadRecord | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [liveStats, setLiveStats] = useState<LiveStats | null>(null);
 
   // Real-time polling
   const [isPolling, setIsPolling] = useState(true);
@@ -185,6 +187,18 @@ export default function AdminDashboard() {
     }, POLL_INTERVAL_MS);
     return () => window.clearInterval(id);
   }, [isPolling, fetchLeads]);
+
+  // Live visitor polling every 10s
+  useEffect(() => {
+    const fetchLive = () =>
+      fetch("/api/admin/live", { cache: "no-store" })
+        .then((r) => r.json())
+        .then(setLiveStats)
+        .catch(() => {});
+    fetchLive();
+    const id = window.setInterval(fetchLive, 10_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const simulators = useMemo(() => {
     const set = new Set<string>();
@@ -301,6 +315,56 @@ export default function AdminDashboard() {
             value={(data?.stats.pipeline ?? 0).toLocaleString("fr-FR")}
           />
         </section>
+
+        {/* Live visitors block */}
+        {liveStats && liveStats.total > 0 && (
+          <section className="mt-6 overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50/60 to-white p-5 shadow-card-soft">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-sm font-semibold text-emerald-800">
+                  {liveStats.total} visiteur{liveStats.total > 1 ? "s" : ""} en ce moment
+                </span>
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.22em] text-emerald-600/70">Temps réel · 10s</span>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {liveStats.onHome > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs text-forest-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+                  Page d'accueil — {liveStats.onHome}
+                </span>
+              )}
+              {liveStats.simulatorStep1 > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs text-forest-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Simulateur étape 1 — {liveStats.simulatorStep1}
+                </span>
+              )}
+              {liveStats.simulatorStep2 > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs text-forest-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+                  Simulateur étape 2 — {liveStats.simulatorStep2}
+                </span>
+              )}
+              {liveStats.simulatorStep3 > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs text-forest-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                  Simulateur étape 3 — {liveStats.simulatorStep3}
+                </span>
+              )}
+              {liveStats.onResult > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs text-forest-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Résultat reçu — {liveStats.onResult}
+                </span>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Per-simulator live breakdown */}
         <section className="mt-6">

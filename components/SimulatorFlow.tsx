@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -33,6 +33,7 @@ import {
   fieldsBySection,
   type FormField,
 } from "@/lib/unified-flow";
+import { usePresence } from "@/hooks/usePresence";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -103,6 +104,12 @@ export default function SimulatorFlow({
   const [pickedSim, setPickedSim] = useState<SimulatorId | null>(null);
   const [firstName, setFirstName] = useState("");
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const presencePage =
+    phase === "result"
+      ? "simulator:result"
+      : `simulator:${currentStep}`;
+  usePresence(presencePage);
 
   const requiredFields = useMemo(
     () => UNIFIED_FORM.filter((f) => f.required),

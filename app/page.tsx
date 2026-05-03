@@ -15,8 +15,10 @@ import {
   Check,
 } from "lucide-react";
 import SimulatorFlow from "@/components/SimulatorFlow";
+import { usePresence } from "@/hooks/usePresence";
 
 export default function Home() {
+  usePresence("home");
   const simulatorRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToSimulator = useCallback(() => {
