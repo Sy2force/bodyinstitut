@@ -9,7 +9,7 @@ const nextConfig = {
   },
   // Keep native / Node-only modules out of the bundle.
   experimental: {
-    serverComponentsExternalPackages: ["better-sqlite3", "nodemailer"],
+    serverComponentsExternalPackages: ["nodemailer"],
   },
 };
 
