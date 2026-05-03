@@ -30,8 +30,16 @@ export const runtime = "nodejs";
  *    simulator's schema before computing the recommendation.
  *  - If `simulator` is a known id (legacy), we use the answers as-is.
  */
+const MAX_BODY_BYTES = 20_480; // 20 KB
+
 export async function POST(req: Request) {
   try {
+    // Payload size guard
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Requête trop volumineuse." }, { status: 413 });
+    }
+
     const ip = getClientIp(req);
     const rl = rateLimit(`lead-complete:${ip}`, { max: 10, windowMs: 60_000 });
     if (!rl.ok) {
