@@ -200,11 +200,11 @@ function Hero({ onStart }: { onStart: () => void }) {
               <ArrowUpRight className="h-5 w-5 transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </button>
 
-            <p className="flex items-center gap-4 text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
+            <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
               <span>Analyse en 3 min</span>
-              <span className="h-1 w-1 rounded-full bg-sand-500" />
+              <span className="h-1 w-1 flex-shrink-0 rounded-full bg-sand-500" />
               <span>Sans engagement</span>
-              <span className="h-1 w-1 rounded-full bg-sand-500" />
+              <span className="h-1 w-1 flex-shrink-0 rounded-full bg-sand-500" />
               <span>100 % gratuit</span>
             </p>
           </motion.div>
@@ -310,7 +310,7 @@ const SimulatorBlock = forwardRef<HTMLDivElement>(function SimulatorBlock(
             </p>
             
             {/* Trust pills */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
                 <Check className="h-3.5 w-3.5 text-brand-500" />
                 100% gratuit
@@ -328,7 +328,7 @@ const SimulatorBlock = forwardRef<HTMLDivElement>(function SimulatorBlock(
         </div>
 
         <div className="mx-auto max-w-3xl">
-          <div className="relative overflow-hidden rounded-[2rem] border border-surface-200 bg-white p-5 shadow-3d-lg md:rounded-[2.5rem] md:p-10">
+          <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-white p-4 shadow-3d-lg sm:rounded-[2rem] sm:p-5 md:rounded-[2.5rem] md:p-10">
             {/* Top inner highlight — glass effect */}
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-sand-50 to-transparent"

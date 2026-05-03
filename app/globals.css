@@ -30,6 +30,11 @@ body.modal-open {
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
 }
 
 html,
@@ -44,6 +49,8 @@ html {
   scroll-behavior: smooth;
   /* compense la navbar desktop */
   scroll-padding-top: 80px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -208,6 +215,13 @@ body {
 /* ─── RESPONSIVE — mobile bottom-nav safe area ─── */
 @media (max-width: 767px) {
   body {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  html {
+    scroll-padding-top: 72px;
+  }
+  /* Bigger tap targets on mobile */
+  .btn, .btn-primary, .btn-ghost, .btn-secondary {
+    min-height: 44px;
   }
 }

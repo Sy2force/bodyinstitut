@@ -51,14 +51,13 @@ export default function MobileBottomNav() {
         />
 
         {/* Simulateur — center, raised, emphasized */}
-        <li className="flex justify-center">
+        <li className="flex flex-col items-center">
           <Link
             href="#simulator"
             aria-label="Offre bilan"
             className="relative -mt-6 flex h-16 w-16 flex-col items-center justify-center rounded-full bg-brand-500 text-white shadow-brand-glow transition-all active:scale-95"
           >
             <Sparkles className="h-6 w-6" strokeWidth={2.2} />
-            <span className="sr-only">Commencer la simulation</span>
             <span
               aria-hidden
               className={`absolute -bottom-1 h-1.5 w-1.5 rounded-full bg-white/90 transition-opacity ${
@@ -68,6 +67,9 @@ export default function MobileBottomNav() {
               }`}
             />
           </Link>
+          <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.2em] text-brand-600">
+            Offre bilan
+          </span>
         </li>
 
         {/* À propos */}
@@ -78,9 +80,6 @@ export default function MobileBottomNav() {
           isActive={pathname === "/" && active === "about"}
         />
       </ul>
-      <p className="mt-1.5 text-center text-[9px] font-medium uppercase tracking-[0.2em] text-brand-700">
-        Simuler
-      </p>
     </nav>
   );
 }

@@ -373,7 +373,7 @@ export default function SimulatorFlow({
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-                  className="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-sand-50 p-6 shadow-lg md:p-8"
+                  className="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-sand-50 p-4 shadow-lg sm:p-6 md:p-8"
                 >
                   {/* Value proposition */}
                   <div className="mb-6 text-center">
@@ -435,7 +435,7 @@ export default function SimulatorFlow({
                     )}
                   </button>
 
-                  <p className="mt-4 flex items-center justify-center gap-4 text-center text-[11px] text-forest-700/40">
+                  <p className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-center text-[11px] text-forest-700/40">
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       2 minutes
@@ -455,7 +455,7 @@ export default function SimulatorFlow({
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="mt-10 flex items-center justify-between gap-4">
+          <div className="mt-8 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={goToPrevStep}

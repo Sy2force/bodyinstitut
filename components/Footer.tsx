@@ -28,7 +28,7 @@ export default function Footer() {
               À propos
             </Link>
             <Link href="#simulator" className="transition-colors hover:text-sand-700">
-              Simulateur
+              Offre bilan
             </Link>
             <a
               href="mailto:contact@bodyinstitut.fr"
