@@ -193,20 +193,12 @@ export default function AdminDashboard() {
               href="/admin"
               className="flex items-center gap-2 text-sm font-semibold text-forest-800"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-3.5 w-3.5"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11Z" />
-                </svg>
-              </span>
-              Body Institut
+              <img 
+                src="/logo.svg" 
+                alt="Body Institut" 
+                className="h-7 w-auto"
+              />
+              <span className="hidden sm:inline">Body Institut</span>
             </Link>
             <span className="hidden h-4 w-px bg-surface-200 md:inline-block" />
             <span className="hidden text-[11px] uppercase tracking-[0.22em] text-forest-700/55 md:inline">
@@ -367,90 +359,123 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Table */}
+        {/* Table — Full lead information */}
         <section className="mt-6 overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-card-soft">
-          <div className="hidden grid-cols-12 gap-4 border-b border-surface-200 bg-surface-50 px-5 py-3 text-[10px] uppercase tracking-[0.22em] text-forest-700/55 md:grid">
-            <span className="col-span-2">Date</span>
-            <span className="col-span-3">Contact</span>
-            <span className="col-span-3">Soin · Objectif</span>
-            <span className="col-span-2 text-right">Budget</span>
-            <span className="col-span-2 text-right">Statut</span>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1400px] text-left text-sm">
+              {/* Header */}
+              <thead>
+                <tr className="border-b border-surface-200 bg-surface-50">
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Date</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Prénom</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Nom</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Email</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Téléphone</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Ville</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Âge</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Sexe</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Objectif</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Zone</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Intensité</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Activité</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Budget</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55">Soin</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55 text-right">Total</th>
+                  <th className="px-4 py-3 text-[10px] font-normal uppercase tracking-[0.22em] text-forest-700/55 text-right">Statut</th>
+                </tr>
+              </thead>
+
+              {loading && (
+                <tbody>
+                  <tr>
+                    <td colSpan={16} className="px-5 py-20 text-center text-forest-700/55">
+                      <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" />
+                      Chargement...
+                    </td>
+                  </tr>
+                </tbody>
+              )}
+
+              {!loading && data && data.rows.length === 0 && (
+                <tbody>
+                  <tr>
+                    <td colSpan={16} className="px-5 py-20 text-center">
+                      <Inbox className="mx-auto h-8 w-8 text-forest-700/25" />
+                      <p className="mt-4 text-sm text-forest-700/65">
+                        Aucun lead pour ces filtres.
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              )}
+
+              {!loading && (
+                <tbody>
+                  {data?.rows.map((r) => {
+                    const isNew = newLeadIds.has(r.id);
+                    return (
+                      <tr
+                        key={r.id}
+                        onClick={() => setActiveLead(r)}
+                        className={`cursor-pointer border-t border-surface-200 transition-colors ${
+                          isNew
+                            ? "animate-pulse bg-brand-50"
+                            : "hover:bg-brand-50/40"
+                        }`}
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap text-forest-700/60">
+                          <div>{new Date(r.created_at).toLocaleDateString("fr-FR")}</div>
+                          <div className="text-[11px] text-forest-700/40">
+                            {new Date(r.created_at).toLocaleTimeString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-forest-800">{r.first_name}</td>
+                        <td className="px-4 py-3 font-medium text-forest-800">{r.last_name}</td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.email}</td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.phone}</td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.city ?? "—"}</td>
+                        <td className="px-4 py-3 text-forest-800">{r.age ? `${r.age} ans` : "—"}</td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.sex ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className="truncate text-forest-800">{r.goal}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="truncate text-forest-800">{r.zone}</span>
+                        </td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.intensity ?? "—"}</td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.sport ?? "—"}</td>
+                        <td className="px-4 py-3 text-forest-700/70">{r.budget_client ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className="truncate font-medium text-forest-800">{r.simulator}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-forest-800">
+                          {(r.price_total ?? r.price_cure ?? 0).toLocaleString("fr-FR")} €
+                          {r.duo_applied === 1 && (
+                            <span className="ml-1 text-[10px] font-medium uppercase tracking-[0.22em] text-brand-600">
+                              duo
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {isNew && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-brand-500 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white shadow-brand-glow">
+                                Nouveau
+                              </span>
+                            )}
+                            <StatusPill status={r.status} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              )}
+            </table>
           </div>
-
-          {loading && (
-            <div className="flex items-center justify-center px-5 py-20 text-forest-700/55">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Chargement...
-            </div>
-          )}
-
-          {!loading && data && data.rows.length === 0 && (
-            <div className="flex flex-col items-center justify-center px-5 py-20 text-center">
-              <Inbox className="h-8 w-8 text-forest-700/25" />
-              <p className="mt-4 text-sm text-forest-700/65">
-                Aucun lead pour ces filtres.
-              </p>
-            </div>
-          )}
-
-          {!loading &&
-            data?.rows.map((r) => {
-              const isNew = newLeadIds.has(r.id);
-              return (
-              <button
-                key={r.id}
-                onClick={() => setActiveLead(r)}
-                className={`grid w-full grid-cols-1 gap-3 border-t border-surface-200 px-5 py-4 text-left text-sm transition-colors md:grid-cols-12 md:items-center md:gap-4 ${
-                  isNew
-                    ? "animate-pulse bg-brand-50"
-                    : "hover:bg-brand-50/40"
-                }`}
-              >
-                <div className="text-forest-700/60 md:col-span-2">
-                  <div>{new Date(r.created_at).toLocaleDateString("fr-FR")}</div>
-                  <div className="text-[11px] text-forest-700/40">
-                    {new Date(r.created_at).toLocaleTimeString("fr-FR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                </div>
-                <div className="min-w-0 md:col-span-3">
-                  <div className="truncate font-medium text-forest-800">
-                    {r.first_name} {r.last_name}
-                  </div>
-                  <div className="truncate text-[12px] text-forest-700/55">
-                    {r.email}
-                  </div>
-                </div>
-                <div className="min-w-0 md:col-span-3">
-                  <div className="truncate text-forest-800">{r.simulator}</div>
-                  <div className="truncate text-[12px] text-forest-700/55">
-                    {r.goal} · {r.zone}
-                  </div>
-                </div>
-                <div className="font-medium text-forest-800 md:col-span-2 md:text-right">
-                  {(r.price_total ?? r.price_cure ?? 0).toLocaleString(
-                    "fr-FR"
-                  )}{" "}
-                  €
-                  {r.duo_applied === 1 && (
-                    <span className="ml-1 text-[10px] font-medium uppercase tracking-[0.22em] text-brand-600">
-                      duo
-                    </span>
-                  )}
-                </div>
-                <div className="md:col-span-2 md:flex md:items-center md:justify-end md:gap-2">
-                  {isNew && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-500 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white shadow-brand-glow">
-                      Nouveau
-                    </span>
-                  )}
-                  <StatusPill status={r.status} />
-                </div>
-              </button>
-              );
-            })}
 
           {/* Pagination */}
           {data && data.total > 0 && (

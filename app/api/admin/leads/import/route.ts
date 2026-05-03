@@ -66,7 +66,8 @@ export async function POST(req: Request) {
   const inserted: string[] = [];
   const errors: { row: number; error: string }[] = [];
 
-  rows.forEach((r, idx) => {
+  for (let idx = 0; idx < rows.length; idx++) {
+    const r = rows[idx];
     const parsed = importLeadSchema.safeParse(r);
     if (!parsed.success) {
       errors.push({
@@ -76,11 +77,11 @@ export async function POST(req: Request) {
             .flat()
             .filter(Boolean)[0] || "validation",
       });
-      return;
+      continue;
     }
     const d = parsed.data;
     const id = randomUUID();
-    insertLead({
+    await insertLead({
       id,
       firstName: d.firstName.trim(),
       lastName: d.lastName.trim(),
@@ -99,7 +100,7 @@ export async function POST(req: Request) {
       sourceIp: "import",
     });
     inserted.push(id);
-  });
+  }
 
   return NextResponse.json({
     ok: true,

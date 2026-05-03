@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const limit = sp.get("limit");
   const offset = sp.get("offset");
 
-  const { rows, total } = listLeads({
+  const { rows, total } = await listLeads({
     q: sp.get("q") ?? undefined,
     status: (sp.get("status") as LeadStatus | "all" | null) ?? undefined,
     simulator: sp.get("simulator") ?? undefined,
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     rows,
     total,
-    stats: leadStats(),
+    stats: await leadStats(),
   });
 }
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   }
   const d = parsed.data;
   const id = randomUUID();
-  const lead = insertLead({
+  const lead = await insertLead({
     id,
     firstName: d.firstName.trim(),
     lastName: d.lastName.trim(),

@@ -47,6 +47,8 @@ export interface LeadRecord {
   budget_client: string | null;       // user's budget tier label
   availability: string | null;
   message: string | null;
+  timeframe: string | null;
+  source: string | null;
 
   // Pricing & recommendation
   mode: string | null;                // "single" | "cure"

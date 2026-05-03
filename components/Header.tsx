@@ -57,22 +57,16 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="#accueil"
-          className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-forest-800"
+          className="flex items-center gap-2.5"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-forest-800 text-white shadow-3d">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-4 w-4"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11Z" />
-            </svg>
+          <img 
+            src="/logo.svg" 
+            alt="Body Institut" 
+            className="h-8 w-auto sm:h-9"
+          />
+          <span className="hidden text-[15px] font-semibold tracking-tight text-forest-800 sm:inline">
+            Body Institut
           </span>
-          <span className="hidden sm:inline">Body Institut</span>
         </Link>
 
         {/* Desktop nav — Accueil · Simulateur (centre) · À propos */}

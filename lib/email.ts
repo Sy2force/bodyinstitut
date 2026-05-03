@@ -1,6 +1,6 @@
 import "server-only";
 import nodemailer from "nodemailer";
-import type { LeadRecord } from "./db";
+import type { LeadRecord } from "@/lib/db";
 import type { Recommendation } from "./recommend";
 
 /**

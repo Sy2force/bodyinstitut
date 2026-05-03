@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getLead, updateLeadSimulation } from "@/lib/db";
+import { getLead, updateLeadSimulation, updateLeadSimulator } from "@/lib/db";
 import { leadCompleteSchema } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import {
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     }
     const d = parsed.data;
 
-    const existing = getLead(d.id);
+    const existing = await getLead(d.id);
     if (!existing) {
       return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
     }
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
       message: d.message || (rawAnswers.message as string) || null,
     };
 
-    const lead = updateLeadSimulation(d.id, {
+    const lead = await updateLeadSimulation(d.id, {
       goal: rec.goalLabel,
       zone: rec.zoneLabel,
       zoneTier: rec.primary.zoneTier,
@@ -152,19 +152,16 @@ export async function POST(req: Request) {
 
     // Persist the picked simulator name on the lead row (so admin filter works)
     try {
-      const { db } = await import("@/lib/db");
-      db.prepare(
-        `UPDATE leads SET simulator = ?, simulator_id = ? WHERE id = ?`
-      ).run(sim.name, sim.id, d.id);
+      await updateLeadSimulator(d.id, sim.name, sim.id);
     } catch (e) {
       console.error("[leads/complete] simulator label update failed", e);
     }
 
     // Fire & forget
-    sendConfirmationEmail({ lead }).catch((e) =>
+    sendConfirmationEmail({ lead: lead! }).catch((e) =>
       console.error("[leads/complete] confirmation email failed", e)
     );
-    sendAdminNotificationEmail({ lead, recommendation: rec }).catch((e) =>
+    sendAdminNotificationEmail({ lead: lead!, recommendation: rec }).catch((e) =>
       console.error("[leads/complete] admin email failed", e)
     );
 

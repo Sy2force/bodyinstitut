@@ -12,20 +12,11 @@ export default function Footer() {
       <div className="container-wide py-12">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="flex items-center gap-2.5 text-[15px] font-semibold text-forest-800">
-            <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-forest-800 text-white shadow-3d">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-3.5 w-3.5"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11Z" />
-              </svg>
-              <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-sand-400" aria-hidden />
-            </span>
+            <img 
+              src="/logo.svg" 
+              alt="Body Institut" 
+              className="h-7 w-auto"
+            />
             Body Institut
           </div>
 

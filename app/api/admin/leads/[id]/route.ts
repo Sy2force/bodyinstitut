@@ -8,7 +8,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const lead = getLead(params.id);
+  const lead = await getLead(params.id);
   if (!lead) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   return NextResponse.json({ lead });
 }
@@ -25,16 +25,16 @@ export async function PATCH(
       { status: 400 }
     );
   }
-  const ok = updateLeadStatus(params.id, parsed.data.status);
+  const ok = await updateLeadStatus(params.id, parsed.data.status);
   if (!ok) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
-  return NextResponse.json({ ok: true, lead: getLead(params.id) });
+  return NextResponse.json({ ok: true, lead: await getLead(params.id) });
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const ok = deleteLead(params.id);
+  const ok = await deleteLead(params.id);
   if (!ok) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

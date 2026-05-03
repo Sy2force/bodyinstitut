@@ -144,6 +144,15 @@ export default function LeadDrawer({
               {lead.message && <Cell full label="Message" value={lead.message} />}
             </div>
 
+            {/* Project details */}
+            <p className="mt-8 text-[10px] uppercase tracking-[0.22em] text-forest-700/55">
+              Projet
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {lead.timeframe && <Cell label="Démarrage" value={lead.timeframe} />}
+              {lead.source && <Cell label="Source" value={lead.source} />}
+            </div>
+
             {lead.analysis && (
               <div className="mt-6 rounded-2xl border border-surface-200 bg-surface-50 p-5">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-forest-700/55">

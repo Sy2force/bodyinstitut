@@ -12,6 +12,7 @@ import {
   Leaf,
   Diamond,
   Droplets,
+  Check,
 } from "lucide-react";
 import SimulatorFlow from "@/components/SimulatorFlow";
 
@@ -46,7 +47,7 @@ function LocalBusinessJsonLd() {
     name: "Body Institut",
     description:
       "Institut minceur & soins corps premium à Paris 18 — cryolipolyse, radiofréquence, pressothérapie. Bilan offert.",
-    image: "/favicon.svg",
+    image: "/logo.svg",
     url:
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
       "https://bodyinstitut.fr",
@@ -292,18 +293,33 @@ const SimulatorBlock = forwardRef<HTMLDivElement>(function SimulatorBlock(
           <div className="mb-10 text-center md:mb-14">
             <span className="eyebrow">
               <Sparkles className="h-3 w-3" />
-              Simulateur personnalisé
+              Bilan gratuit en ligne
             </span>
-            <h2 className="display-section mt-5 text-balance">
-              Votre protocole,
+            <h2 className="mt-5 text-balance text-2xl font-semibold tracking-tight text-forest-900 sm:text-3xl md:text-4xl">
+              Simulez votre transformation,
               <br />
-              <span className="text-gradient-brand">calibré pour vous.</span>
+              <span className="text-gradient-brand">recevez votre bilan.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base text-forest-700/70 md:text-lg">
-              Répondez à toutes les questions — chaque détail nous permet de
-              vous recommander le soin le plus adapté et de vous rappeler avec
-              une proposition précise.
+              En 2 minutes, obtenez une analyse personnalisée de votre objectif 
+              avec une estimation tarifaire et un protocole sur-mesure.
             </p>
+            
+            {/* Trust pills */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
+                <Check className="h-3.5 w-3.5 text-brand-500" />
+                100% gratuit
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
+                <Check className="h-3.5 w-3.5 text-brand-500" />
+                Sans engagement
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
+                <Check className="h-3.5 w-3.5 text-brand-500" />
+                Résultat immédiat
+              </span>
+            </div>
           </div>
         </div>
 

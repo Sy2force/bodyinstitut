@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Check,
@@ -15,6 +15,11 @@ import {
   Target,
   Rocket,
   MessageSquare,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Mail,
+  ShieldCheck,
 } from "lucide-react";
 import {
   SIMULATORS,
@@ -35,6 +40,8 @@ type Phase = "form" | "result";
 
 type FormValues = Record<string, string>;
 
+type FormStep = 1 | 2 | 3;
+
 const SECTION_ICONS: Record<string, typeof User> = {
   contact: User,
   profile: HeartPulse,
@@ -49,6 +56,36 @@ const ROUTING_FIELDS = ["objective", "zone", "intensity", "lifestyle", "budget"]
 /** Additional project fields for /complete. */
 const PROJECT_FIELDS = ["timeframe", "availability", "source"];
 
+/* ─────────────────────────── Step Configuration ─────────────────────────── */
+
+// Optimized for conversion: Goal first (exciting), then Profile, then Contact
+const STEP_SECTIONS: Record<FormStep, string[]> = {
+  1: ["goal"],           // Objectif + Zone = priorités de transformation
+  2: ["profile"],        // Profil physique pour calibrage
+  3: ["contact", "project", "message"], // Contact + Délai + Message optionnel
+};
+
+const STEP_TITLES: Record<FormStep, { title: string; subtitle: string }> = {
+  1: { 
+    title: "Votre objectif de transformation", 
+    subtitle: "En 2 minutes, découvrez votre protocole personnalisé" 
+  },
+  2: { 
+    title: "Votre profil physique", 
+    subtitle: "Pour calibrer précisément votre bilan" 
+  },
+  3: { 
+    title: "Votre bilan personnalisé est prêt !", 
+    subtitle: "Recevez-le gratuitement par email et SMS" 
+  },
+};
+
+const STEP_ICONS: Record<FormStep, typeof Target> = {
+  1: Target,
+  2: HeartPulse,
+  3: Sparkles,
+};
+
 /* ═══════════════════════════ MAIN FLOW ═══════════════════════════ */
 
 export default function SimulatorFlow({
@@ -57,6 +94,7 @@ export default function SimulatorFlow({
   onComplete?: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>("form");
+  const [currentStep, setCurrentStep] = useState<FormStep>(1);
   const [values, setValues] = useState<FormValues>({});
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -71,11 +109,50 @@ export default function SimulatorFlow({
     []
   );
 
+  // Progress for all steps
   const answered = requiredFields.filter((f) => (values[f.id] ?? "").trim().length > 0).length;
   const totalRequired = requiredFields.length;
-  const progressPct = Math.round((answered / totalRequired) * 100);
+  const totalProgressPct = Math.round((answered / totalRequired) * 100);
+
+  // Progress for current step
+  const currentStepSections = STEP_SECTIONS[currentStep];
+  const currentStepFields = useMemo(
+    () => UNIFIED_FORM.filter((f) => currentStepSections.includes(f.section)),
+    [currentStepSections]
+  );
+  const currentStepRequiredFields = currentStepFields.filter((f) => f.required);
+  const currentStepAnswered = currentStepRequiredFields.filter(
+    (f) => (values[f.id] ?? "").trim().length > 0
+  ).length;
+  const currentStepTotal = currentStepRequiredFields.length;
+  const currentStepProgressPct = currentStepTotal > 0 
+    ? Math.round((currentStepAnswered / currentStepTotal) * 100) 
+    : 100;
 
   const canSubmit = answered === totalRequired && consent && !submitting;
+
+  // Check if current step is complete
+  const isCurrentStepComplete = currentStepAnswered === currentStepTotal;
+
+  // Navigation handlers
+  const goToNextStep = () => {
+    if (currentStep < 3 && isCurrentStepComplete) {
+      setCurrentStep((s) => (s + 1) as FormStep);
+      // Scroll to top of form
+      setTimeout(() => {
+        rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  };
+
+  const goToPrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep((s) => (s - 1) as FormStep);
+      setTimeout(() => {
+        rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  };
 
   /* ──────────── Submit ──────────── */
 
@@ -163,6 +240,7 @@ export default function SimulatorFlow({
     setRec(null);
     setPickedSim(null);
     setError(null);
+    setCurrentStep(1);
     setPhase("form");
     setTimeout(() => {
       rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -171,91 +249,238 @@ export default function SimulatorFlow({
 
   /* ──────────── Render ──────────── */
 
+  const stepInfo = STEP_TITLES[currentStep];
+  const StepIcon = STEP_ICONS[currentStep];
+
   return (
     <div ref={rootRef} className="relative">
       {phase === "form" && (
         <>
-          {/* Sticky progress header */}
-          <StickyProgress
-            answered={answered}
-            total={totalRequired}
-            pct={progressPct}
+          {/* Step Progress Header */}
+          <StepProgress
+            currentStep={currentStep}
+            totalSteps={3}
+            stepAnswered={currentStepAnswered}
+            stepTotal={currentStepTotal}
+            stepPct={currentStepProgressPct}
+            totalAnswered={answered}
+            totalRequired={totalRequired}
+            totalPct={totalProgressPct}
           />
 
-          <div className="space-y-12 md:space-y-16">
-            {UNIFIED_SECTIONS.map((section, sectionIndex) => (
-              <SectionBlock
-                key={section.id}
-                section={section}
-                sectionIndex={sectionIndex}
-                values={values}
-                setValue={(id, v) => setValues((s) => ({ ...s, [id]: v }))}
-              />
-            ))}
+          {/* Bilan Header Card */}
+          <motion.div
+            key={`header-${currentStep}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-8"
+          >
+            {/* Bilan Badge */}
+            <div className="mb-6 flex items-center justify-center gap-2">
+              <motion.div 
+                className="flex items-center gap-2 rounded-full bg-gradient-to-r from-forest-800 to-forest-700 px-4 py-2 text-white shadow-lg"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              >
+                <StepIcon className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Bilan gratuit · Étape {currentStep}/3
+                </span>
+              </motion.div>
+            </div>
 
-            {/* Consent + submit */}
-            <motion.section
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="scroll-mt-24"
-            >
-              <div className="card-3d p-6 md:p-8">
-                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-surface-200 bg-surface-50 p-4 md:p-5">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-1 h-4 w-4 flex-shrink-0 rounded border-surface-300 accent-brand-500"
-                    required
-                  />
-                  <span className="text-[13px] leading-relaxed text-forest-700/80">
-                    J'accepte d'être recontacté(e) par Body Institut et que mes
-                    données soient traitées pour préparer mon analyse
-                    personnalisée et mon bilan offert.
-                    <span className="mt-1 block text-[11px] text-forest-700/55">
-                      RGPD · données stockées en France · désinscription sur
-                      simple demande.
-                    </span>
-                  </span>
-                </label>
-
-                {error && (
-                  <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={submitForm}
-                  disabled={!canSubmit}
-                  className="btn-primary btn-lg mt-6 w-full disabled:cursor-not-allowed disabled:bg-surface-200 disabled:text-forest-700/40 disabled:shadow-none md:text-lg"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Analyse en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5" />
-                      {answered < totalRequired
-                        ? `Réponses : ${answered}/${totalRequired}`
-                        : "Obtenir mon analyse personnalisée"}
-                      {answered === totalRequired && (
-                        <ArrowRight className="h-5 w-5" />
-                      )}
-                    </>
-                  )}
-                </button>
-
-                <p className="mt-3 text-center text-[11px] uppercase tracking-[0.22em] text-forest-700/45">
-                  Vos données · RGPD · Zéro engagement
-                </p>
+            {/* Title Card */}
+            <div className="rounded-2xl border border-sand-200 bg-gradient-to-br from-sand-50 to-white p-4 text-center shadow-sm sm:p-6 md:p-8">
+              <h2 className="text-xl font-bold tracking-tight text-forest-900 sm:text-2xl md:text-3xl">
+                {stepInfo.title}
+              </h2>
+              <p className="mt-2 text-base text-forest-700/70 md:text-lg">
+                {stepInfo.subtitle}
+              </p>
+              
+              {/* Trust badges */}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-[11px] text-forest-600/60">
+                <span className="inline-flex items-center gap-1">
+                  <Check className="h-3 w-3 text-brand-500" />
+                  Gratuit
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Check className="h-3 w-3 text-brand-500" />
+                  Sans engagement
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Check className="h-3 w-3 text-brand-500" />
+                  Résultat immédiat
+                </span>
               </div>
-            </motion.section>
+            </div>
+          </motion.div>
+
+          {/* Step Content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`step-${currentStep}`}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-8"
+            >
+              {/* Sections for current step */}
+              {UNIFIED_SECTIONS.filter((s) => STEP_SECTIONS[currentStep].includes(s.id))
+                .map((section, sectionIndex) => (
+                  <BilanSectionBlock
+                    key={section.id}
+                    section={section}
+                    sectionIndex={sectionIndex}
+                    stepNumber={currentStep}
+                    values={values}
+                    setValue={(id, v) => setValues((s) => ({ ...s, [id]: v }))}
+                  />
+                ))}
+
+              {/* Step 3: Consent + Submit */}
+              {currentStep === 3 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                  className="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-sand-50 p-6 shadow-lg md:p-8"
+                >
+                  {/* Value proposition */}
+                  <div className="mb-6 text-center">
+                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg">
+                      <Sparkles className="h-7 w-7" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-forest-900">
+                      Votre protocole personnalisé vous attend
+                    </h3>
+                    <p className="mt-1 text-sm text-forest-700/70">
+                      Recevez votre analyse complète + estimation tarifaire en 2 min
+                    </p>
+                  </div>
+
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-surface-200 bg-white p-4 transition-all hover:border-brand-300 md:p-5">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-surface-300 accent-brand-500"
+                      required
+                    />
+                    <span className="text-[13px] leading-relaxed text-forest-700/80">
+                      J'accepte de recevoir mon bilan gratuit par email et d'être rappelée 
+                      par un(e) expert(e) Body Institut pour affiner ma recommandation.
+                      <span className="mt-1 block text-[11px] text-forest-700/50">
+                        RGPD · Désinscription instantanée · Données sécurisées
+                      </span>
+                    </span>
+                  </label>
+
+                  {error && (
+                    <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                      {error}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={submitForm}
+                    disabled={!canSubmit}
+                    className="btn-primary btn-lg mt-6 w-full bg-gradient-to-r from-brand-600 to-brand-500 disabled:cursor-not-allowed disabled:bg-surface-200 disabled:text-forest-700/40 disabled:shadow-none md:text-lg"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Génération de votre bilan...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5" />
+                        {answered < totalRequired
+                          ? `Complétez vos infos (${answered}/${totalRequired})`
+                          : "Recevoir mon bilan GRATUIT"}
+                        {answered === totalRequired && (
+                          <ArrowRight className="h-5 w-5" />
+                        )}
+                      </>
+                    )}
+                  </button>
+
+                  <p className="mt-4 flex items-center justify-center gap-4 text-center text-[11px] text-forest-700/40">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      2 minutes
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      Reçu instantanément
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      100% confidentiel
+                    </span>
+                  </p>
+                </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Navigation */}
+          <div className="mt-10 flex items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={goToPrevStep}
+              disabled={currentStep === 1}
+              className="group flex items-center gap-2 rounded-full border border-surface-200 bg-white px-4 py-2 text-sm font-medium text-forest-700 transition-all hover:border-forest-300 hover:bg-surface-50 disabled:cursor-not-allowed disabled:border-surface-100 disabled:bg-surface-100 disabled:text-forest-700/30"
+            >
+              <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+              Retour
+            </button>
+
+            {/* Step indicators */}
+            <div className="flex items-center gap-2">
+              {[1, 2, 3].map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => {
+                    if (step < currentStep) {
+                      setCurrentStep(step as FormStep);
+                    }
+                  }}
+                  className={`h-2 rounded-full transition-all ${
+                    step === currentStep
+                      ? "w-8 bg-forest-800"
+                      : step < currentStep
+                        ? "w-2 bg-forest-800"
+                        : "w-2 bg-surface-300"
+                  }`}
+                  aria-label={`Étape ${step}`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={goToNextStep}
+              disabled={currentStep === 3 || !isCurrentStepComplete}
+              className="group flex items-center gap-2 rounded-full bg-forest-800 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-forest-800/20 transition-all hover:bg-forest-700 hover:shadow-xl hover:shadow-forest-800/30 disabled:cursor-not-allowed disabled:bg-surface-300 disabled:shadow-none"
+            >
+              {currentStep < 3 ? (
+                <>
+                  Continuer
+                  <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </>
+              ) : (
+                <>
+                  Terminer
+                  <Check className="h-4 w-4" />
+                </>
+              )}
+            </button>
           </div>
         </>
       )}
@@ -278,50 +503,95 @@ export default function SimulatorFlow({
   );
 }
 
-/* ═══════════════════════════ Sticky progress ═══════════════════════════ */
+/* ═══════════════════════════ Step progress ═══════════════════════════ */
 
-function StickyProgress({
-  answered,
-  total,
-  pct,
+function StepProgress({
+  currentStep,
+  totalSteps,
+  stepAnswered,
+  stepTotal,
+  stepPct,
+  totalAnswered,
+  totalRequired,
+  totalPct,
 }: {
-  answered: number;
-  total: number;
-  pct: number;
+  currentStep: number;
+  totalSteps: number;
+  stepAnswered: number;
+  stepTotal: number;
+  stepPct: number;
+  totalAnswered: number;
+  totalRequired: number;
+  totalPct: number;
 }) {
   return (
-    <div className="sticky top-16 z-20 -mx-5 mb-10 border-b border-surface-200 bg-white/80 px-5 py-3 backdrop-blur-xl md:-mx-10 md:rounded-t-[2.5rem] md:px-10">
+    <div className="mb-8 rounded-2xl border border-surface-200 bg-white p-4 shadow-sm md:p-6">
+      {/* Step pills */}
+      <div className="mb-3 flex items-center justify-center gap-2">
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
+          <div
+            key={step}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+              step === currentStep
+                ? "bg-forest-800 text-white shadow-md"
+                : step < currentStep
+                  ? "bg-brand-100 text-forest-800"
+                  : "bg-sand-100 text-forest-700/60"
+            }`}
+          >
+            {step < currentStep ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <span className="tabular-nums">{step}</span>
+            )}
+            <span className="hidden sm:inline">
+              {step === 1 && "Objectif"}
+              {step === 2 && "Profil"}
+              {step === 3 && "Finalisation"}
+            </span>
+          </div>
+        ))}
+      </div>
+
       <div className="flex items-center justify-between gap-3">
         <span className="text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
-          Progression
+          Étape {currentStep}
         </span>
         <span className="text-sm font-medium tabular-nums text-forest-800">
-          {answered} / {total}
-          <span className="ml-2 text-forest-700/45">· {pct}%</span>
+          {stepAnswered} / {stepTotal}
+          <span className="ml-2 text-forest-700/45">· {stepPct}%</span>
         </span>
       </div>
-      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-surface-200">
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-sand-100">
         <motion.div
           className="h-full rounded-full bg-gradient-to-r from-forest-800 via-sand-500 to-sand-300"
           initial={false}
-          animate={{ width: `${pct}%` }}
+          animate={{ width: `${stepPct}%` }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         />
+      </div>
+
+      {/* Total progress mini */}
+      <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-forest-700/40">
+        <span>Progression totale</span>
+        <span>{totalAnswered}/{totalRequired} · {totalPct}%</span>
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════════ Section ═══════════════════════════ */
+/* ═══════════════════════════ Bilan Section ═══════════════════════════ */
 
-function SectionBlock({
+function BilanSectionBlock({
   section,
   sectionIndex,
+  stepNumber,
   values,
   setValue,
 }: {
   section: { id: string; title: string; subtitle: string };
   sectionIndex: number;
+  stepNumber: number;
   values: FormValues;
   setValue: (id: string, v: string) => void;
 }) {
@@ -332,53 +602,63 @@ function SectionBlock({
   ).length;
   const done = answered === fields.length;
 
+  // Get section label based on step
+  const sectionLabel = stepNumber === 1 
+    ? "OBJECTIF" 
+    : stepNumber === 2 
+      ? "PROFIL" 
+      : "COORDONNÉES";
+
   return (
     <motion.section
-      id={`section-${section.id}`}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: sectionIndex * 0.1 }}
       className="scroll-mt-24"
     >
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl border border-surface-200 bg-white text-forest-800 shadow-card-soft">
-            <Icon className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-sand-600">
-              Section {sectionIndex + 1} / {UNIFIED_SECTIONS.length}
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-forest-800 md:text-3xl">
-              {section.title}
-            </h2>
-            <p className="mt-1 max-w-xl text-sm text-forest-700/65 md:text-base">
-              {section.subtitle}
-            </p>
+      {/* Section header - cleaner, more symmetric */}
+      <div className="mb-5 rounded-2xl border border-sand-200 bg-gradient-to-br from-sand-50/80 to-white p-5 md:p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl shadow-sm transition-all ${
+                done
+                  ? "bg-brand-500 text-white"
+                  : "bg-white text-forest-800 border border-sand-200"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-sand-600">
+                {sectionLabel}
+              </span>
+              <h3 className="text-lg font-bold tracking-tight text-forest-900">
+                {section.title}
+              </h3>
+            </div>
           </div>
+          
+          {done && (
+            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </span>
+          )}
         </div>
-        {done && (
-          <motion.span
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 14 }}
-            className="hidden h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-sand-500 text-white shadow-card-soft md:grid"
-            aria-label="Section complétée"
-          >
-            <Check className="h-4 w-4" strokeWidth={3} />
-          </motion.span>
-        )}
+        
+        <p className="mt-3 text-sm text-forest-700/60 md:text-[15px]">
+          {section.subtitle}
+        </p>
       </div>
 
-      <div className="grid gap-4">
-        {fields.map((field, i) => (
-          <FieldCard
+      {/* Fields - symmetric grid */}
+      <div className="grid gap-4 md:gap-5">
+        {fields.map((field) => (
+          <BilanFieldRow
             key={field.id}
             field={field}
             value={values[field.id] ?? ""}
             onChange={(v) => setValue(field.id, v)}
-            index={i}
           />
         ))}
       </div>
@@ -386,66 +666,66 @@ function SectionBlock({
   );
 }
 
-/* ═══════════════════════════ Field (card per question) ═══════════════════════════ */
+/* ═══════════════════════════ Bilan Field ═══════════════════════════ */
 
-function FieldCard({
+function BilanFieldRow({
   field,
   value,
   onChange,
-  index,
 }: {
   field: FormField;
   value: string;
   onChange: (v: string) => void;
-  index: number;
 }) {
-  const isOptions = field.type === "options";
-  const isAnswered = (value ?? "").trim().length > 0;
+  const isEmpty = value.trim().length === 0;
+  const showError = field.required && isEmpty;
+  const isDone = !isEmpty;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        duration: 0.5,
-        delay: index * 0.04,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className={`card-3d relative overflow-hidden p-5 md:p-7 ${
-        isAnswered ? "ring-1 ring-sand-300/50" : ""
-      }`}
-    >
-      <div className="relative">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-sand-600">
-              {field.step}
-              {field.required && <span className="ml-1 text-sand-500">·</span>}
-            </p>
-            <h3 className="mt-1.5 text-lg font-semibold tracking-tight text-forest-800 md:text-xl">
-              {field.title}
-            </h3>
-            {field.subtitle && (
-              <p className="mt-1 text-sm text-forest-700/65">
-                {field.subtitle}
-              </p>
-            )}
-          </div>
-          {isAnswered && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 240, damping: 14 }}
-              className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-forest-800 text-white"
-              aria-label="Répondu"
-            >
-              <Check className="h-3.5 w-3.5" strokeWidth={3} />
-            </motion.span>
-          )}
+    <div className={`rounded-2xl border bg-white p-6 shadow-sm transition-all focus-within:border-brand-400 focus-within:shadow-lg md:p-7 ${
+      isDone 
+        ? "border-brand-300 bg-gradient-to-br from-brand-50/50 to-white shadow-md" 
+        : "border-surface-200 hover:border-surface-300"
+    }`}>
+      {/* Clean header with step indicator */}
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-all ${
+            isDone 
+              ? "bg-brand-500 text-white shadow-md" 
+              : "bg-surface-200 text-forest-700/60"
+          }`}>
+            {isDone ? <Check className="h-4 w-4" strokeWidth={3} /> : field.step.charAt(0)}
+          </span>
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-sand-600">
+            {field.step}
+          </span>
         </div>
+        {field.required && !isDone && (
+          <span className="rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-600 border border-rose-100">
+            À compléter
+          </span>
+        )}
+        {isDone && (
+          <span className="rounded-full bg-brand-50 px-3 py-1 text-[11px] font-medium text-brand-700 border border-brand-100">
+            Complété
+          </span>
+        )}
+      </div>
 
-        {isOptions ? (
+      {/* Title with better hierarchy */}
+      <label className="mb-2 block text-lg font-bold text-forest-900">
+        {field.title}
+      </label>
+      {field.subtitle && (
+        <p className="mb-5 text-[14px] leading-relaxed text-forest-600">
+          {field.subtitle}
+        </p>
+      )}
+
+      {/* Input - symmetric and clean */}
+      <div className="mt-4">
+        {field.type === "options" ? (
           <OptionsGrid
             options={field.options ?? []}
             value={value}
@@ -453,45 +733,35 @@ function FieldCard({
           />
         ) : field.type === "textarea" ? (
           <textarea
-            rows={4}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={field.placeholder}
-            className="w-full resize-none rounded-2xl border border-surface-200 bg-white/90 px-4 py-3 text-sm text-forest-800 outline-none transition-all placeholder:text-forest-700/35 focus:border-forest-700 focus:ring-4 focus:ring-forest-800/10"
+            rows={4}
+            className="w-full rounded-xl border border-surface-300 bg-surface-50 px-5 py-4 text-[16px] text-forest-800 placeholder:text-forest-500/50 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100 transition-all resize-none"
           />
         ) : (
-          <div className="relative">
+          <div className="flex items-center gap-3">
             <input
               type={field.type}
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={field.placeholder}
-              autoComplete={field.autocomplete}
               min={field.min}
               max={field.max}
-              inputMode={
-                field.type === "tel"
-                  ? "tel"
-                  : field.type === "email"
-                    ? "email"
-                    : field.type === "number"
-                      ? "numeric"
-                      : "text"
-              }
-              className="w-full rounded-2xl border border-surface-200 bg-white/90 px-4 py-3 pr-16 text-base text-forest-800 outline-none transition-all placeholder:text-forest-700/35 focus:border-forest-700 focus:ring-4 focus:ring-forest-800/10"
+              autoComplete={field.autocomplete}
+              className="flex-1 rounded-xl border border-surface-300 bg-surface-50 px-5 py-4 text-[16px] text-forest-800 placeholder:text-forest-500/50 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100 transition-all"
             />
             {field.unit && (
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium uppercase tracking-[0.22em] text-forest-700/45">
+              <span className="text-[16px] font-semibold text-forest-600 px-2">
                 {field.unit}
               </span>
             )}
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
-
 /* ═══════════════════════════ Options grid ═══════════════════════════ */
 
 function OptionsGrid({
@@ -538,31 +808,26 @@ function OptionCard({
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.98 }}
-      whileHover={{ y: -1 }}
+      whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className={`group relative flex h-full items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-300 ${
+      className={`group relative flex min-h-[72px] w-full items-center gap-3 rounded-xl border p-4 text-left transition-all duration-300 ${
         active
-          ? "border-forest-800 bg-forest-800 text-white shadow-3d"
-          : "border-surface-200 bg-white text-forest-700 hover:border-forest-700/40"
+          ? "border-forest-800 bg-forest-800 text-white shadow-lg"
+          : "border-surface-200 bg-white text-forest-700 hover:border-brand-400 hover:shadow-md"
       }`}
     >
-      {option.emoji && (
-        <span className={`text-lg ${active ? "" : ""}`} aria-hidden="true">
-          {option.emoji}
-        </span>
-      )}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div
-          className={`text-[14px] font-medium ${
-            active ? "text-white" : "text-forest-800"
+          className={`text-[15px] font-semibold leading-tight ${
+            active ? "text-white" : "text-forest-900"
           }`}
         >
           {option.label}
         </div>
         {option.sub && (
           <div
-            className={`mt-0.5 text-[12px] ${
-              active ? "text-white/70" : "text-forest-700/60"
+            className={`mt-1 text-[13px] leading-snug ${
+              active ? "text-white/80" : "text-forest-600"
             }`}
           >
             {option.sub}
@@ -570,13 +835,13 @@ function OptionCard({
         )}
       </div>
       <span
-        className={`mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full border transition-all ${
+        className={`grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border-2 transition-all ${
           active
             ? "border-white bg-white text-forest-800"
-            : "border-surface-300 text-transparent"
+            : "border-surface-300 text-transparent group-hover:border-brand-300"
         }`}
       >
-        <Check className="h-3 w-3" strokeWidth={3} />
+        <Check className="h-3.5 w-3.5" strokeWidth={3} />
       </span>
     </motion.button>
   );

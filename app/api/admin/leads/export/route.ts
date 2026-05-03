@@ -28,6 +28,8 @@ const HEADERS = [
   "Offre duo",
   "Soin complémentaire",
   "Disponibilités",
+  "Démarrage",
+  "Source",
   "Message",
   "Statut",
   "Analyse",
@@ -37,7 +39,7 @@ const HEADERS = [
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
 
-  const { rows } = listLeads({
+  const { rows } = await listLeads({
     q: sp.get("q") ?? undefined,
     status: (sp.get("status") as LeadStatus | "all" | null) ?? undefined,
     simulator: sp.get("simulator") ?? undefined,
@@ -76,6 +78,8 @@ export async function GET(req: Request) {
         r.duo_applied ? "oui" : "non",
         r.complementary_simulator ?? "",
         r.availability ?? "",
+        r.timeframe ?? "",
+        r.source ?? "",
         (r.message ?? "").replace(/\s+/g, " "),
         r.status,
         (r.analysis ?? "").replace(/\s+/g, " "),

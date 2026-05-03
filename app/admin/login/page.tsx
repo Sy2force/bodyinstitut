@@ -64,23 +64,11 @@ function LoginInner() {
         className="relative w-full max-w-md rounded-3xl border border-surface-200 bg-white p-8 shadow-card-soft"
       >
         <div className="flex items-center gap-3">
-          <span className="relative grid h-10 w-10 place-items-center rounded-full bg-forest-800 text-white shadow-3d">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-4 w-4"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11Z" />
-            </svg>
-            <span
-              className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-sand-400"
-              aria-hidden
-            />
-          </span>
+          <img 
+            src="/logo.svg" 
+            alt="Body Institut" 
+            className="h-10 w-auto"
+          />
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
               Body Institut

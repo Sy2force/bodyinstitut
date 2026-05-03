@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const d = parsed.data;
 
     const id = randomUUID();
-    const lead = insertLead({
+    const lead = await insertLead({
       id,
       firstName: d.firstName.trim(),
       lastName: d.lastName.trim(),
