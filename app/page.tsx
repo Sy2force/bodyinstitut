@@ -162,8 +162,8 @@ function Hero({ onStart }: { onStart: () => void }) {
             }}
             className="display-hero mt-6 text-balance"
           >
-            L'art de{" "}
-            <span className="text-gradient-brand">révéler</span>
+            La science de{" "}
+            <span className="text-gradient-brand">sculpter</span>
             <br />
             votre silhouette.
           </motion.h1>
@@ -175,9 +175,9 @@ function Hero({ onStart }: { onStart: () => void }) {
             transition={{ duration: 0.9, delay: 0.25 }}
             className="mx-auto mt-8 max-w-xl text-balance text-lg text-forest-700/80 md:text-2xl"
           >
-            Analyse sur-mesure en 3 minutes.
+            Votre protocole idéal, calculé en 3 minutes.
             <br className="hidden sm:inline" />
-            <span className="text-forest-700/60">Bilan offert, sans engagement.</span>
+            <span className="text-forest-700/60">Bilan diagnostique offert, sans engagement.</span>
           </motion.p>
 
           <motion.div
@@ -201,11 +201,11 @@ function Hero({ onStart }: { onStart: () => void }) {
             </button>
 
             <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
-              <span>Analyse en 3 min</span>
+              <span>Diagnostic en 3 min</span>
               <span className="h-1 w-1 flex-shrink-0 rounded-full bg-sand-500" />
               <span>Sans engagement</span>
               <span className="h-1 w-1 flex-shrink-0 rounded-full bg-sand-500" />
-              <span>100 % gratuit</span>
+              <span>100 % offert</span>
             </p>
           </motion.div>
 
@@ -219,18 +219,18 @@ function Hero({ onStart }: { onStart: () => void }) {
             {[
               {
                 icon: Diamond,
-                name: "Adipologie",
-                sub: "Cryolipolyse · −4 à −6 cm",
+                name: "CryoSculpt",
+                sub: "Réduction ciblée · Technologie certifiée",
               },
               {
                 icon: Leaf,
                 name: "Esthe Shape",
-                sub: "Radiofréquence · +25 % fermeté",
+                sub: "Bio-stimulation · Fermeté +25 %",
               },
               {
                 icon: Droplets,
                 name: "Pressothérapie",
-                sub: "Drainage · jambes légères",
+                sub: "Drainage actif · Microcirculation",
               },
             ].map((s, i) => (
               <motion.div
@@ -297,16 +297,16 @@ const SimulatorBlock = forwardRef<HTMLDivElement>(function SimulatorBlock(
           <div className="mb-10 text-center md:mb-14">
             <span className="eyebrow">
               <Sparkles className="h-3 w-3" />
-              Bilan gratuit en ligne
+              Simulateur · Diagnostic offert
             </span>
             <h2 className="mt-5 text-balance text-2xl font-semibold tracking-tight text-forest-900 sm:text-3xl md:text-4xl">
-              Simulez votre transformation,
+              Votre transformation,
               <br />
-              <span className="text-gradient-brand">recevez votre bilan.</span>
+              <span className="text-gradient-brand">analysée sur-mesure.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base text-forest-700/70 md:text-lg">
-              En 2 minutes, obtenez une analyse personnalisée de votre objectif 
-              avec une estimation tarifaire et un protocole sur-mesure.
+              Notre simulateur analyse votre profil et génère instantanément 
+              le protocole le plus adapté à votre objectif — avec une estimation tarifaire précise.
             </p>
             
             {/* Trust pills */}
@@ -357,17 +357,17 @@ function MiniAbout() {
           <div>
             <span className="eyebrow">
               <ShieldCheck className="h-3 w-3" />
-              Body Institut
+              Body Institut · Paris 18
             </span>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-forest-800 md:text-5xl">
-              10 ans d'expertise,
+              La technologie
               <br />
-              <span className="text-gradient-brand">à Paris 18.</span>
+              <span className="text-gradient-brand">qui transforme.</span>
             </h2>
             <p className="mt-5 text-base text-forest-700/70 md:text-lg">
-              Trois technologies de pointe — cryolipolyse, radiofréquence,
-              pressothérapie — orchestrées par des expertes formées, avec un
-              suivi personnalisé à chaque étape.
+              Cryolipolyse, radiofréquence, pressothérapie — trois protocoles 
+              certifiés, guidés par une approche clinique précise et un 
+              accompagnement individualisé à chaque étape de votre transformation.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <a
@@ -394,9 +394,9 @@ function MiniAbout() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <StatCard value="10+" label="Années" />
+            <StatCard value="100%" label="Sur-mesure" />
             <StatCard value="3" label="Technologies" />
-            <StatCard value="2 000+" label="Clientes" />
+            <StatCard value="2 000+" label="Bilans réalisés" />
             <StatCard value="97%" label="Satisfaction" />
           </div>
         </div>

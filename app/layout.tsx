@@ -12,14 +12,16 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Body Institut — Votre corps. Votre transformation.",
+    default: "Body Institut — La technologie qui sculpte votre silhouette.",
     template: "%s · Body Institut",
   },
   description:
-    "Institut minceur & soins corps à Paris 18. Simulation personnalisée en 3 minutes pour découvrir le protocole idéal — cryolipolyse, radiofréquence, pressothérapie.",
+    "Institut de soins corps à Paris 18. Obtenez votre protocole sur-mesure en 3 minutes grâce à notre simulateur — cryolipolyse, radiofréquence, pressothérapie. Bilan diagnostique offert.",
   applicationName: "Body Institut",
   keywords: [
-    "institut minceur Paris",
+    "Institut soins corps Paris",
+    "technologies corps certifiées",
+    "simulateur bilan corps",
     "cryolipolyse",
     "radiofréquence",
     "pressothérapie",
@@ -43,9 +45,9 @@ export const metadata: Metadata = {
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "Body Institut — Votre transformation, sur-mesure",
+    title: "Body Institut — La science de sculpter votre silhouette.",
     description:
-      "Simulation personnalisée en 3 minutes. Protocole sur-mesure. Bilan offert.",
+      "Simulateur de transformation corps en 3 minutes. Protocole certifié sur-mesure. Bilan diagnostique offert à Paris 18.",
     url: "/",
     siteName: "Body Institut",
     locale: "fr_FR",
@@ -53,9 +55,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Body Institut — Votre transformation, sur-mesure",
+    title: "Body Institut — La science de sculpter votre silhouette.",
     description:
-      "Simulation personnalisée en 3 minutes · Bilan offert à Paris 18.",
+      "Protocole sur-mesure en 3 minutes · Bilan diagnostique offert à Paris 18.",
   },
   robots: {
     index: true,
