@@ -5,6 +5,7 @@ services:
   - type: web
     name: body-institut
     runtime: node
+    rootDir: .
     buildCommand: npm install && npm run build
     startCommand: npm start
     env: node
