@@ -460,10 +460,10 @@ export default function SimulatorFlow({
               type="button"
               onClick={goToPrevStep}
               disabled={currentStep === 1}
-              className="group flex items-center gap-2 rounded-full border border-surface-200 bg-white px-4 py-2 text-sm font-medium text-forest-700 transition-all hover:border-forest-300 hover:bg-surface-50 disabled:cursor-not-allowed disabled:border-surface-100 disabled:bg-surface-100 disabled:text-forest-700/30"
+              className="group flex items-center gap-1.5 rounded-full border border-surface-200 bg-white px-3 py-2 text-sm font-medium text-forest-700 transition-all hover:border-forest-300 hover:bg-surface-50 disabled:cursor-not-allowed disabled:border-surface-100 disabled:bg-surface-100 disabled:text-forest-700/30 sm:px-4 sm:gap-2"
             >
               <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-              Retour
+              <span className="hidden sm:inline">Retour</span>
             </button>
 
             {/* Step indicators */}
@@ -493,7 +493,7 @@ export default function SimulatorFlow({
               type="button"
               onClick={goToNextStep}
               disabled={currentStep === 3 || !isCurrentStepComplete}
-              className="group flex items-center gap-2 rounded-full bg-forest-800 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-forest-800/20 transition-all hover:bg-forest-700 hover:shadow-xl hover:shadow-forest-800/30 disabled:cursor-not-allowed disabled:bg-surface-300 disabled:shadow-none"
+              className="group flex items-center gap-1.5 rounded-full bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-forest-800/20 transition-all hover:bg-forest-700 hover:shadow-xl hover:shadow-forest-800/30 disabled:cursor-not-allowed disabled:bg-surface-300 disabled:shadow-none sm:gap-2 sm:px-5 sm:py-2.5"
             >
               {currentStep < 3 ? (
                 <>
@@ -643,7 +643,7 @@ function BilanSectionBlock({
       className="scroll-mt-24"
     >
       {/* Section header - cleaner, more symmetric */}
-      <div className="mb-5 rounded-2xl border border-sand-200 bg-gradient-to-br from-sand-50/80 to-white p-5 md:p-6">
+      <div className="mb-4 rounded-2xl border border-sand-200 bg-gradient-to-br from-sand-50/80 to-white p-4 md:p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div
@@ -708,43 +708,43 @@ function BilanFieldRow({
   const isDone = !isEmpty;
 
   return (
-    <div className={`rounded-2xl border bg-white p-6 shadow-sm transition-all focus-within:border-brand-400 focus-within:shadow-lg md:p-7 ${
+    <div className={`rounded-2xl border bg-white p-4 shadow-sm transition-all focus-within:border-brand-400 focus-within:shadow-lg sm:p-5 md:p-7 ${
       isDone 
         ? "border-brand-300 bg-gradient-to-br from-brand-50/50 to-white shadow-md" 
         : "border-surface-200 hover:border-surface-300"
     }`}>
       {/* Clean header with step indicator */}
-      <div className="mb-5 flex items-center justify-between gap-3">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-all ${
+          <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[12px] font-bold transition-all ${
             isDone 
               ? "bg-brand-500 text-white shadow-md" 
               : "bg-surface-200 text-forest-700/60"
           }`}>
             {isDone ? <Check className="h-4 w-4" strokeWidth={3} /> : field.step.charAt(0)}
           </span>
-          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-sand-600">
+          <span className="hidden text-[12px] font-bold uppercase tracking-[0.12em] text-sand-600 sm:inline">
             {field.step}
           </span>
         </div>
         {field.required && !isDone && (
-          <span className="rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-600 border border-rose-100">
+          <span className="flex-shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-600 border border-rose-100">
             À compléter
           </span>
         )}
         {isDone && (
-          <span className="rounded-full bg-brand-50 px-3 py-1 text-[11px] font-medium text-brand-700 border border-brand-100">
-            Complété
+          <span className="flex-shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700 border border-brand-100">
+            ✓
           </span>
         )}
       </div>
 
       {/* Title with better hierarchy */}
-      <label className="mb-2 block text-lg font-bold text-forest-900">
+      <label className="mb-2 block text-base font-bold text-forest-900 sm:text-lg">
         {field.title}
       </label>
       {field.subtitle && (
-        <p className="mb-5 text-[14px] leading-relaxed text-forest-600">
+        <p className="mb-4 text-[13px] leading-relaxed text-forest-600 sm:text-[14px]">
           {field.subtitle}
         </p>
       )}
@@ -801,10 +801,10 @@ function OptionsGrid({
 }) {
   const cols =
     options.length >= 6
-      ? "sm:grid-cols-2 md:grid-cols-3"
+      ? "grid-cols-2 md:grid-cols-3"
       : options.length >= 4
-        ? "sm:grid-cols-2"
-        : "sm:grid-cols-3";
+        ? "grid-cols-2"
+        : "grid-cols-1 sm:grid-cols-3";
 
   return (
     <div className={`grid gap-2.5 ${cols}`}>
@@ -836,7 +836,7 @@ function OptionCard({
       whileTap={{ scale: 0.98 }}
       whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className={`group relative flex min-h-[72px] w-full items-center gap-3 rounded-xl border p-4 text-left transition-all duration-300 ${
+      className={`group relative flex min-h-[60px] w-full items-center gap-2 rounded-xl border p-3 text-left transition-all duration-300 sm:gap-3 sm:p-4 ${
         active
           ? "border-forest-800 bg-forest-800 text-white shadow-lg"
           : "border-surface-200 bg-white text-forest-700 hover:border-brand-400 hover:shadow-md"
@@ -844,7 +844,7 @@ function OptionCard({
     >
       <div className="flex-1 min-w-0">
         <div
-          className={`text-[15px] font-semibold leading-tight ${
+          className={`text-[13px] font-semibold leading-tight sm:text-[15px] ${
             active ? "text-white" : "text-forest-900"
           }`}
         >
@@ -852,7 +852,7 @@ function OptionCard({
         </div>
         {option.sub && (
           <div
-            className={`mt-1 text-[13px] leading-snug ${
+            className={`mt-0.5 text-[11px] leading-snug sm:text-[13px] ${
               active ? "text-white/80" : "text-forest-600"
             }`}
           >
@@ -861,7 +861,7 @@ function OptionCard({
         )}
       </div>
       <span
-        className={`grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border-2 transition-all ${
+        className={`grid h-5 w-5 flex-shrink-0 place-items-center rounded-full border-2 transition-all sm:h-6 sm:w-6 ${
           active
             ? "border-white bg-white text-forest-800"
             : "border-surface-300 text-transparent group-hover:border-brand-300"
@@ -897,7 +897,7 @@ function ResultStep({
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-3xl border border-sand-200 bg-gradient-to-br from-sand-50 to-white p-6 shadow-3d md:p-8"
+        className="relative overflow-hidden rounded-3xl border border-sand-200 bg-gradient-to-br from-sand-50 to-white p-4 shadow-3d sm:p-6 md:p-8"
       >
         <div className="flex items-start gap-4">
           <motion.span
@@ -929,13 +929,13 @@ function ResultStep({
       </motion.div>
 
       {/* Main result card */}
-      <div className="card-3d relative overflow-hidden p-6 md:p-10">
+      <div className="card-3d relative overflow-hidden p-4 sm:p-6 md:p-10">
         <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-sand-300/20 blur-3xl" />
 
         <div className="relative space-y-6">
           <div>
             <p className="eyebrow">Soin recommandé</p>
-            <h3 className="mt-3 text-3xl font-semibold tracking-tight text-forest-800 md:text-5xl">
+            <h3 className="mt-3 text-2xl font-semibold tracking-tight text-forest-800 sm:text-3xl md:text-5xl">
               {recommendation.primary.simulatorName}
             </h3>
             <p className="mt-2 text-sm text-forest-700/65 md:text-base">
@@ -948,7 +948,7 @@ function ResultStep({
           </div>
 
           {/* Pricing — 3 cells */}
-          <div className="grid grid-cols-3 gap-3 rounded-2xl border border-surface-200 bg-surface-50 p-4 md:p-6">
+          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-surface-200 bg-surface-50 p-3 sm:gap-3 md:p-6">
             <Cell
               label="Séance"
               value={`${recommendation.primary.pricePerSession} €`}
@@ -966,11 +966,11 @@ function ResultStep({
           </div>
 
           {/* Expected result */}
-          <div className="rounded-2xl border border-surface-200 bg-white p-4 md:p-6">
+          <div className="rounded-2xl border border-surface-200 bg-white p-3 sm:p-4 md:p-6">
             <p className="text-[10px] uppercase tracking-[0.22em] text-sand-600">
               Résultat estimé
             </p>
-            <p className="mt-2 text-xl font-semibold text-forest-800 md:text-2xl">
+            <p className="mt-2 text-lg font-semibold text-forest-800 sm:text-xl md:text-2xl">
               {recommendation.resultText}
             </p>
             <p className="mt-2 text-xs text-forest-700/55">
@@ -1086,7 +1086,7 @@ function Cell({
         {label}
       </p>
       <p
-        className={`mt-1.5 text-lg font-semibold tracking-tight md:text-2xl ${
+        className={`mt-1 text-sm font-semibold tracking-tight sm:text-base md:text-2xl ${
           accent ? "text-gradient-brand" : "text-forest-800"
         }`}
       >
