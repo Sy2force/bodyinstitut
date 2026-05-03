@@ -25,6 +25,7 @@ import StatusPill from "@/components/admin/StatusPill";
 import LeadDrawer from "@/components/admin/LeadDrawer";
 import type { LeadRecord, LeadStatus } from "@/lib/types";
 import type { LiveStats } from "@/lib/presence";
+import type { TrackEvent, TrackEventType } from "@/lib/event-bus";
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -113,6 +114,7 @@ export default function AdminDashboard() {
   const [activeLead, setActiveLead] = useState<LeadRecord | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [liveStats, setLiveStats] = useState<LiveStats | null>(null);
+  const [liveEvents, setLiveEvents] = useState<TrackEvent[]>([]);
 
   // Real-time polling
   const [isPolling, setIsPolling] = useState(true);
@@ -198,6 +200,31 @@ export default function AdminDashboard() {
     fetchLive();
     const id = window.setInterval(fetchLive, 10_000);
     return () => window.clearInterval(id);
+  }, []);
+
+  // SSE — real-time event feed
+  useEffect(() => {
+    let es: EventSource | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const connect = () => {
+      es = new EventSource("/api/admin/events");
+      es.onmessage = (e) => {
+        try {
+          const evt = JSON.parse(e.data) as TrackEvent;
+          setLiveEvents((prev) => [evt, ...prev].slice(0, 30));
+        } catch { /* ignore */ }
+      };
+      es.onerror = () => {
+        es?.close();
+        retryTimer = setTimeout(connect, 5_000);
+      };
+    };
+    connect();
+    return () => {
+      es?.close();
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, []);
 
   const simulators = useMemo(() => {
@@ -363,6 +390,34 @@ export default function AdminDashboard() {
                 </span>
               )}
             </div>
+          </section>
+        )}
+
+        {/* Live event feed */}
+        {liveEvents.length > 0 && (
+          <section className="mt-4 overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-card-soft">
+            <div className="flex items-center justify-between border-b border-surface-100 px-5 py-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-forest-800">
+                  Activité en direct
+                </span>
+              </div>
+              <button
+                onClick={() => setLiveEvents([])}
+                className="text-[10px] text-forest-700/40 hover:text-forest-700 transition-colors"
+              >
+                Effacer
+              </button>
+            </div>
+            <ul className="max-h-64 divide-y divide-surface-50 overflow-y-auto">
+              {liveEvents.map((ev) => (
+                <EventRow key={ev.id} event={ev} />
+              ))}
+            </ul>
           </section>
         )}
 
@@ -840,5 +895,31 @@ function Select<T extends string>({
         ▾
       </span>
     </label>
+  );
+}
+
+const EVENT_META: Record<TrackEventType, { dot: string; label: string }> = {
+  arrival:        { dot: "bg-sky-400",     label: "Nouveau visiteur sur le site" },
+  simulator_open: { dot: "bg-amber-400",   label: "A commencé le simulateur" },
+  step_2:         { dot: "bg-orange-400",  label: "Passé à l'étape 2 (profil)" },
+  step_3:         { dot: "bg-red-400",     label: "Passé à l'étape 3 (contact)" },
+  submitted:      { dot: "bg-violet-500",  label: "A soumis sa demande" },
+  result:         { dot: "bg-emerald-500", label: "A reçu son résultat ✓" },
+};
+
+function EventRow({ event }: { event: TrackEvent }) {
+  const meta = EVENT_META[event.type] ?? { dot: "bg-surface-300", label: event.type };
+  const diff = Math.round((Date.now() - event.ts) / 1000);
+  const ago =
+    diff < 5 ? "À l'instant" :
+    diff < 60 ? `il y a ${diff}s` :
+    `il y a ${Math.round(diff / 60)}min`;
+
+  return (
+    <li className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-50 transition-colors">
+      <span className={`h-2 w-2 flex-shrink-0 rounded-full ${meta.dot}`} />
+      <span className="flex-1 text-sm text-forest-800">{meta.label}</span>
+      <span className="text-[11px] tabular-nums text-forest-700/40">{ago}</span>
+    </li>
   );
 }

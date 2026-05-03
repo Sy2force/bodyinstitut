@@ -34,6 +34,7 @@ import {
   type FormField,
 } from "@/lib/unified-flow";
 import { usePresence } from "@/hooks/usePresence";
+import { trackEvent } from "@/hooks/useTrackEvent";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -111,6 +112,12 @@ export default function SimulatorFlow({
       : `simulator:${currentStep}`;
   usePresence(presencePage);
 
+  // Track first interaction (simulator opened)
+  const openFired = useRef(false);
+
+  // Track step advances
+  const trackedStep = useRef<number>(1);
+
   const requiredFields = useMemo(
     () => UNIFIED_FORM.filter((f) => f.required),
     []
@@ -144,8 +151,12 @@ export default function SimulatorFlow({
   // Navigation handlers
   const goToNextStep = () => {
     if (currentStep < 3 && isCurrentStepComplete) {
-      setCurrentStep((s) => (s + 1) as FormStep);
-      // Scroll to top of form
+      const next = (currentStep + 1) as FormStep;
+      setCurrentStep(next);
+      if (next > trackedStep.current) {
+        trackedStep.current = next;
+        trackEvent(next === 2 ? "step_2" : "step_3");
+      }
       setTimeout(() => {
         rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 50);
@@ -166,6 +177,7 @@ export default function SimulatorFlow({
   const submitForm = async () => {
     setError(null);
     setSubmitting(true);
+    trackEvent("submitted");
     try {
       // Step 1 — create partial lead (contact + profile)
       const startPayload: Record<string, unknown> = {
@@ -229,6 +241,7 @@ export default function SimulatorFlow({
       if (j2.simulator?.id) setPickedSim(j2.simulator.id as SimulatorId);
 
       setPhase("result");
+      trackEvent("result");
       if (onComplete) onComplete();
       // scroll to top of flow for nice reveal
       setTimeout(() => {
@@ -344,7 +357,13 @@ export default function SimulatorFlow({
                     sectionIndex={sectionIndex}
                     stepNumber={currentStep}
                     values={values}
-                    setValue={(id, v) => setValues((s) => ({ ...s, [id]: v }))}
+                    setValue={(id, v) => {
+                      if (!openFired.current) {
+                        openFired.current = true;
+                        trackEvent("simulator_open");
+                      }
+                      setValues((s) => ({ ...s, [id]: v }));
+                    }}
                   />
                 ))}
 
