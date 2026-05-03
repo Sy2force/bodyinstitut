@@ -9,6 +9,7 @@ services:
     startCommand: npm start
     env: node
     plan: starter
+    autoDeploy: true
     envVars:
       - key: NODE_VERSION
         value: 20.11.0
@@ -28,8 +29,8 @@ services:
         value: https://body-institut.onrender.com
       - key: SMTP_FROM
         value: noreply@bodyinstitut.fr
-      - key: RESEND_FROM
-        value: noreply@bodyinstitut.fr
+      - key: NODE_ENV
+        value: production
     healthCheckPath: /
 
   - type: postgres

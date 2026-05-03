@@ -34,13 +34,20 @@ function getClient() {
     );
   }
 
-  // Supabase requires SSL. postgres.js auto-detects, but we force it for safety.
+  // Determine SSL mode from URL params; fall back to a permissive config
+  // that works with Render internal connections, Supabase, Neon, etc.
+  const sslConfig = url.includes("sslmode=disable")
+    ? false
+    : url.includes("sslmode=no-verify")
+    ? { rejectUnauthorized: false }
+    : { rejectUnauthorized: false }; // works for Render, Supabase, Neon
+
   const sql = postgres(url, {
-    ssl: url.includes("sslmode=disable") ? false : "require",
+    ssl: sslConfig,
     max: 10,
     idle_timeout: 20,
     connect_timeout: 30,
-    prepare: false, // Supabase pooler (pgbouncer transaction mode) doesn't support prepared statements
+    prepare: false,
   });
 
   global.__bi_sql = sql;
