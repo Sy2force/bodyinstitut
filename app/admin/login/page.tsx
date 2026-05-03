@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, Loader2, ArrowRight } from "lucide-react";
+import { Lock, Loader2, ArrowRight, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
@@ -30,6 +30,8 @@ function LoginInner() {
   const [p, setP] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [attempts, setAttempts] = useState(0);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,11 @@ function LoginInner() {
         body: JSON.stringify({ username: u, password: p }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || "Échec de connexion");
+      if (!res.ok) {
+        setAttempts((n) => n + 1);
+        setP("");
+        throw new Error(json.error || "Échec de connexion");
+      }
       router.replace(from);
       router.refresh();
     } catch (e2) {
@@ -93,16 +99,32 @@ function LoginInner() {
           />
           <Field
             label="Mot de passe"
-            type="password"
+            type={showPwd ? "text" : "password"}
             value={p}
             onChange={setP}
             autoComplete="current-password"
+            suffix={
+              <button
+                type="button"
+                onClick={() => setShowPwd((v) => !v)}
+                className="text-forest-700/40 transition-colors hover:text-forest-700"
+                tabIndex={-1}
+              >
+                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            }
           />
         </div>
 
         {err && (
-          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {err}
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
+            <ShieldAlert className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-500" />
+            <p className="text-sm text-rose-700">{err}</p>
+          </div>
+        )}
+        {attempts >= 3 && !err && (
+          <p className="mt-3 text-center text-[11px] text-amber-600">
+            {attempts} tentative{attempts > 1 ? "s" : ""} échouée{attempts > 1 ? "s" : ""}. Compte bloqué après 5.
           </p>
         )}
 
@@ -139,26 +161,33 @@ function Field({
   onChange,
   type = "text",
   autoComplete,
+  suffix,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
   autoComplete?: string;
+  suffix?: React.ReactNode;
 }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.22em] text-forest-700/65">
         {label}
       </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete={autoComplete}
-        required
-        className="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm text-forest-800 outline-none transition-all placeholder:text-forest-700/35 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15"
-      />
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          required
+          className="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 pr-10 text-sm text-forest-800 outline-none transition-all placeholder:text-forest-700/35 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15"
+        />
+        {suffix && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</span>
+        )}
+      </div>
     </label>
   );
 }
