@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" fill="none">
-  <path d="M16 20C16 12.268 22.268 6 30 6C37.732 6 44 12.268 44 20V28H16V20Z" fill="#17140f"/>
-  <rect x="8" y="32" width="48" height="10" rx="2" fill="#17140f"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 44" fill="none">
+  <!-- Left arch (left bump) -->
+  <path d="M2 24 A13 13 0 0 1 28 24 Z" fill="#17140f"/>
+  <!-- Right arch (right bump) -->
+  <path d="M32 24 A13 13 0 0 1 58 24 Z" fill="#17140f"/>
+  <!-- Horizontal bar -->
+  <rect x="2" y="28" width="56" height="13" rx="2" fill="#17140f"/>
 </svg>
