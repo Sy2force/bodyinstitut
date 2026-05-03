@@ -13,10 +13,31 @@ const PUBLIC_PATHS = new Set([
   "/api/admin/logout",
 ]);
 
+const MUTATING_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+
+  // CSRF: verify Origin matches host on all state-changing admin API requests
+  if (
+    pathname.startsWith("/api/admin/") &&
+    MUTATING_METHODS.has(req.method)
+  ) {
+    const origin = req.headers.get("origin");
+    const host = req.headers.get("host");
+    if (origin && host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+  }
 
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = await verifySession(token);

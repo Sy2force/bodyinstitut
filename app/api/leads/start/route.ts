@@ -10,9 +10,19 @@ export const runtime = "nodejs";
  * Step 1 — partial lead creation (ULTRA-SLIM contact form: prénom + email + tel).
  * Returns { id } that the client will send back in /api/leads/complete.
  */
+const MAX_BODY_BYTES = 10_240; // 10 KB
+
 export async function POST(req: Request) {
   try {
+    // Payload size guard
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Requête trop volumineuse." }, { status: 413 });
+    }
+
     const ip = getClientIp(req);
+
+    // Rate limit by IP: 5 per minute
     const rl = rateLimit(`lead-start:${ip}`, { max: 5, windowMs: 60_000 });
     if (!rl.ok) {
       return NextResponse.json(
@@ -37,6 +47,21 @@ export async function POST(req: Request) {
       );
     }
     const d = parsed.data;
+
+    // Rate limit by email: 3 submissions per 24h (prevents same email spam)
+    const emailKey = `lead-start:email:${d.email.toLowerCase()}`;
+    const rlEmail = rateLimit(emailKey, { max: 3, windowMs: 24 * 60 * 60_000 });
+    if (!rlEmail.ok) {
+      return NextResponse.json(
+        { error: "Cette adresse email a déjà soumis plusieurs demandes. Réessayez demain." },
+        { status: 429 }
+      );
+    }
+
+    // Honeypot check (company field must be empty)
+    if (d.company && d.company.length > 0) {
+      return NextResponse.json({ ok: true, id: randomUUID() }); // silently reject bots
+    }
 
     const id = randomUUID();
     const lead = await insertLead({
