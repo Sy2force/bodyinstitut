@@ -50,10 +50,6 @@ const nextConfig = {
       },
     ];
   },
-  // Keep native / Node-only modules out of the bundle.
-  experimental: {
-    serverComponentsExternalPackages: ["nodemailer"],
-  },
 };
 
 module.exports = nextConfig;

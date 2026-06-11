@@ -1,419 +1,252 @@
 "use client";
 
-import { forwardRef, useCallback, useRef } from "react";
-import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
-import {
-  ArrowDown,
-  ArrowUpRight,
-  Sparkles,
-  CalendarCheck2,
-  ShieldCheck,
-  Leaf,
-  Diamond,
-  Droplets,
-  Check,
-} from "lucide-react";
-import SimulatorFlow from "@/components/SimulatorFlow";
-import { usePresence } from "@/hooks/usePresence";
-import { useArrivalTrack } from "@/hooks/useTrackEvent";
+import { useRef, useState } from "react";
+
+type FormState = "idle" | "loading" | "success" | "error";
 
 export default function Home() {
-  usePresence("home");
-  useArrivalTrack();
-  const simulatorRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLElement>(null);
+  const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", message: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [state, setState] = useState<FormState>("idle");
 
-  const scrollToSimulator = useCallback(() => {
-    simulatorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }, []);
-
-  return (
-    <>
-      <LocalBusinessJsonLd />
-      <Hero onStart={scrollToSimulator} />
-      <SimulatorBlock ref={simulatorRef} />
-      <MiniAbout />
-    </>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   STRUCTURED DATA — LocalBusiness (SEO local Paris 18)
-   ══════════════════════════════════════════════════════════════════ */
-
-function LocalBusinessJsonLd() {
-  const data = {
-    "@context": "https://schema.org",
-    "@type": "HealthAndBeautyBusiness",
-    name: "Body Institut",
-    description:
-      "Institut minceur & soins corps premium à Paris 18 — cryolipolyse, radiofréquence, pressothérapie. Bilan offert.",
-    image: "/logo.svg",
-    url:
-      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-      "https://bodyinstitut.fr",
-    telephone: "+33-1-00-00-00-00",
-    priceRange: "€€",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Paris",
-      postalCode: "75018",
-      addressCountry: "FR",
-    },
-    areaServed: { "@type": "City", name: "Paris" },
-    openingHours: "Mo-Sa 10:00-19:00",
-    sameAs: [],
-    makesOffer: [
-      {
-        "@type": "Offer",
-        name: "Cryolipolyse Adipologie",
-        description: "Réduction des amas graisseux par cryolipolyse.",
-      },
-      {
-        "@type": "Offer",
-        name: "Esthe Shape — Radiofréquence",
-        description: "Raffermissement et drainage par radiofréquence.",
-      },
-      {
-        "@type": "Offer",
-        name: "Pressothérapie",
-        description: "Drainage lymphatique pour jambes légères.",
-      },
-    ],
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.firstName.trim()) e.firstName = "Prénom requis";
+    if (!form.lastName.trim()) e.lastName = "Nom requis";
+    if (!form.phone.trim() || form.phone.trim().length < 6) e.phone = "Téléphone requis";
+    if (!form.email.trim() || !form.email.includes("@")) e.email = "Email invalide";
+    return e;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setErrors({});
+    setState("loading");
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setState("success");
+        setForm({ firstName: "", lastName: "", phone: "", email: "", message: "" });
+      } else {
+        setState("error");
+      }
+    } catch {
+      setState("error");
+    }
+  };
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  );
-}
+    <div className="min-h-screen bg-white">
 
-/* ══════════════════════════════════════════════════════════════════
-   HERO — Apple-style ultra-direct (beige / black / gray)
-   ══════════════════════════════════════════════════════════════════ */
-
-function Hero({ onStart }: { onStart: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-  const yTitle = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const ySub = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const scaleCard = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
-  const opacityCue = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-
-  return (
-    <section
-      id="accueil"
-      ref={ref}
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-surface-50 pt-24"
-    >
-      {/* Cream backdrop with soft gold halo */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-hero-fade"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[70vh] bg-sand-fade"
-        aria-hidden
-      />
-      {/* Subtle grain */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-noise opacity-[0.04]"
-        aria-hidden
-      />
-      {/* Floating 3D beige pill — Apple-like hero object */}
-      <motion.div
-        aria-hidden
-        style={{ scale: scaleCard }}
-        className="pointer-events-none absolute right-[-12%] top-[12%] hidden h-[520px] w-[520px] rounded-full bg-gradient-to-br from-sand-200 via-sand-100 to-surface-0 opacity-70 shadow-3d-lg md:block"
-      />
-      <motion.div
-        aria-hidden
-        style={{ scale: scaleCard }}
-        className="pointer-events-none absolute left-[-10%] bottom-[8%] hidden h-[320px] w-[320px] rounded-full bg-gradient-to-tr from-forest-800/10 via-transparent to-sand-200/60 md:block"
-      />
-
-      <div className="container-wide relative z-10">
-        <div className="mx-auto max-w-4xl text-center">
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="eyebrow"
+      {/* ── HEADER ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-stone-100">
+        <div className="max-w-5xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+          <span className="text-base sm:text-lg font-semibold tracking-tight text-stone-900">Body Institut</span>
+          <button
+            onClick={scrollToForm}
+            className="bg-stone-900 text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-stone-700 transition-colors"
           >
-            <Sparkles className="h-3 w-3" />
-            Body Institut · Paris 18
-          </motion.span>
+            Être rappelée
+          </button>
+        </div>
+      </header>
 
-          <motion.h1
-            style={{ y: yTitle }}
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.9,
-              delay: 0.1,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="display-hero mt-6 text-balance"
-          >
-            La science de{" "}
-            <span className="text-gradient-brand">sculpter</span>
-            <br />
-            votre silhouette.
-          </motion.h1>
-
-          <motion.p
-            style={{ y: ySub }}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.25 }}
-            className="mx-auto mt-8 max-w-xl text-balance text-lg text-forest-700/80 md:text-2xl"
-          >
-            Votre protocole idéal, calculé en 3 minutes.
-            <br className="hidden sm:inline" />
-            <span className="text-forest-700/60">Bilan diagnostique offert, sans engagement.</span>
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.45 }}
-            className="mt-12 flex flex-col items-center gap-5"
-          >
+      {/* ── HERO ── */}
+      <section className="pt-14 sm:pt-16">
+        <div className="relative h-[55vw] min-h-[260px] max-h-[620px] w-full overflow-hidden bg-stone-800">
+          <img
+            src="/images/cover.jpg"
+            alt="Body Institut — soins minceur Paris 18"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "center 30%" }}
+            onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+          <div className="absolute inset-0 bg-black/45" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+            <h1 className="text-xl sm:text-3xl md:text-5xl font-bold text-white leading-tight max-w-3xl">
+              Body Institut
+              <span className="block text-sm sm:text-xl md:text-2xl font-normal mt-1 text-white/80">Soin minceur &amp; silhouette · Paris 18</span>
+            </h1>
+            <p className="mt-3 text-white/85 text-xs sm:text-base max-w-md leading-relaxed hidden sm:block">
+              Drainage, madérothérapie, radiofréquence — affinez et raffermissez votre silhouette.
+            </p>
             <button
-              type="button"
-              onClick={onStart}
-              className="group inline-flex w-full max-w-md items-center justify-center gap-2.5 rounded-full bg-brand-500 px-10 py-5 text-base font-semibold uppercase tracking-[0.15em] text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-600 active:scale-[0.98] sm:text-lg"
-              style={{
-                boxShadow:
-                  "0 1px 0 rgba(255,255,255,0.2) inset, 0 30px 60px -15px rgba(10,8,6,0.5), 0 10px 24px -6px rgba(10,8,6,0.3)",
-              }}
+              onClick={scrollToForm}
+              className="mt-5 sm:mt-8 bg-white text-stone-900 font-semibold px-6 sm:px-8 py-3 sm:py-3.5 rounded-full hover:bg-stone-100 transition-colors text-sm sm:text-base shadow"
             >
-              <Sparkles className="h-5 w-5 transition-transform duration-500 group-hover:rotate-12" />
-              Offre bilan gratuit
-              <ArrowUpRight className="h-5 w-5 transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              Prendre rendez-vous
             </button>
+          </div>
+        </div>
+      </section>
 
-            <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-forest-700/55">
-              <span>Diagnostic en 3 min</span>
-              <span className="h-1 w-1 flex-shrink-0 rounded-full bg-sand-500" />
-              <span>Sans engagement</span>
-              <span className="h-1 w-1 flex-shrink-0 rounded-full bg-sand-500" />
-              <span>100 % offert</span>
-            </p>
-          </motion.div>
+      {/* ── PHOTOS ── */}
+      <section className="max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-12">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          {[
+            { src: "/images/photo-1.jpg", label: "Radiofréquence" },
+            { src: "/images/photo-2.jpg", label: "Cryolipolyse" },
+            { src: "/images/photo-3.jpg", label: "Madérothérapie" },
+          ].map((item, i) => (
+            <div key={i} className="aspect-[3/4] overflow-hidden rounded-xl sm:rounded-2xl shadow-sm bg-stone-100 relative group">
+              <img
+                src={item.src}
+                alt=""
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/50 to-transparent">
+                <span className="text-white text-[10px] sm:text-xs font-medium">{item.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          {/* Trust chips — 3 soins */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.6 }}
-            className="mx-auto mt-16 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3"
-          >
-            {[
-              {
-                icon: Diamond,
-                name: "CryoSculpt",
-                sub: "Réduction ciblée · Technologie certifiée",
-              },
-              {
-                icon: Leaf,
-                name: "Esthe Shape",
-                sub: "Bio-stimulation · Fermeté +25 %",
-              },
-              {
-                icon: Droplets,
-                name: "Pressothérapie",
-                sub: "Drainage actif · Microcirculation",
-              },
-            ].map((s, i) => (
-              <motion.div
-                key={s.name}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.7 + i * 0.08 }}
-                className="card-3d flex items-center gap-3 bg-white/80 p-4 backdrop-blur text-left"
+      {/* ── PRÉSENTATION ── */}
+      <section className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8 text-center">
+        <h2 className="text-xl sm:text-3xl font-semibold text-stone-900 leading-snug">
+          Un accompagnement minceur personnalisé
+        </h2>
+        <p className="mt-3 sm:mt-4 text-stone-500 text-sm sm:text-lg leading-relaxed">
+          Body Institut vous accompagne avec des soins ciblés pour drainer, sculpter et raffermir la silhouette.
+          Laissez vos coordonnées et notre équipe vous rappelle rapidement.
+        </p>
+      </section>
+
+      {/* ── SERVICES ── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+          {[
+            { title: "Radiofréquence", desc: "Raffermissement et remodelage en profondeur." },
+            { title: "Cryolipolyse", desc: "Élimination ciblée des graisses résistantes." },
+            { title: "Madérothérapie", desc: "Drainage et sculpture naturelle de la silhouette." },
+          ].map((s, i) => (
+            <div key={i} className="bg-stone-50 rounded-2xl p-4 sm:p-6 border border-stone-100">
+              <h3 className="font-semibold text-stone-900 text-sm sm:text-base">{s.title}</h3>
+              <p className="text-stone-500 text-xs sm:text-sm mt-1 leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FORMULAIRE ── */}
+      <section
+        ref={formRef}
+        id="contact"
+        className="max-w-lg mx-auto px-4 sm:px-6 py-8 sm:py-12"
+      >
+        <div className="bg-stone-50 rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-sm border border-stone-100">
+          <h3 className="text-lg sm:text-xl font-semibold text-stone-900 mb-5 text-center">Être rappelée</h3>
+
+          {state === "success" ? (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4"><span className="text-green-600 font-bold text-xl">✓</span></div>
+              <p className="text-stone-700 font-semibold text-base sm:text-lg">Demande envoyée !</p>
+              <p className="text-stone-400 mt-2 text-sm">Nous vous rappellerons très rapidement.</p>
+              <button
+                onClick={() => setState("idle")}
+                className="mt-6 text-sm text-stone-400 hover:text-stone-600 underline"
               >
-                <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-forest-800 text-white">
-                  <s.icon className="h-4 w-4" />
-                </span>
+                Envoyer une nouvelle demande
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-sm font-semibold tracking-tight text-forest-800">
-                    {s.name}
-                  </div>
-                  <div className="text-[11px] text-forest-700/60">
-                    {s.sub}
-                  </div>
+                  <label className="block text-xs sm:text-sm font-medium text-stone-700 mb-1">Prénom *</label>
+                  <input
+                    type="text"
+                    value={form.firstName}
+                    onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                    className={`w-full rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 text-sm outline-none focus:ring-2 focus:ring-stone-400 bg-white ${errors.firstName ? "border-red-400" : "border-stone-200"}`}
+                    placeholder="Marie"
+                  />
+                  {errors.firstName && <p className="text-[11px] text-red-500 mt-1">{errors.firstName}</p>}
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Scroll cue */}
-          <motion.button
-            type="button"
-            onClick={onStart}
-            style={{ opacity: opacityCue }}
-            className="mx-auto mt-14 hidden items-center justify-center gap-2 text-[10px] uppercase tracking-[0.26em] text-forest-700/45 hover:text-sand-700 md:inline-flex"
-          >
-            <ArrowDown className="h-3 w-3 animate-bounce" />
-            Découvrir
-          </motion.button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   SIMULATOR BLOCK — hosts the inline SimulatorFlow (80 % of page)
-   ══════════════════════════════════════════════════════════════════ */
-
-const SimulatorBlock = forwardRef<HTMLDivElement>(function SimulatorBlock(
-  _props,
-  ref
-) {
-  return (
-    <section
-      id="simulator"
-      ref={ref}
-      className="relative scroll-mt-20 border-t border-surface-200 bg-gradient-to-b from-white to-surface-50 py-16 md:py-28"
-    >
-      {/* Top sand halo */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-sand-fade"
-        aria-hidden
-      />
-
-      <div className="container-wide relative">
-        <div className="mx-auto max-w-3xl">
-          {/* Section heading above the form */}
-          <div className="mb-10 text-center md:mb-14">
-            <span className="eyebrow">
-              <Sparkles className="h-3 w-3" />
-              Simulateur · Diagnostic offert
-            </span>
-            <h2 className="mt-5 text-balance text-2xl font-semibold tracking-tight text-forest-900 sm:text-3xl md:text-4xl">
-              Votre transformation,
-              <br />
-              <span className="text-gradient-brand">analysée sur-mesure.</span>
-            </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base text-forest-700/70 md:text-lg">
-              Notre simulateur analyse votre profil et génère instantanément 
-              le protocole le plus adapté à votre objectif — avec une estimation tarifaire précise.
-            </p>
-            
-            {/* Trust pills */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
-                <Check className="h-3.5 w-3.5 text-brand-500" />
-                100% gratuit
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
-                <Check className="h-3.5 w-3.5 text-brand-500" />
-                Sans engagement
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-800/5 px-3 py-1.5 text-xs font-medium text-forest-700">
-                <Check className="h-3.5 w-3.5 text-brand-500" />
-                Résultat immédiat
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-3xl">
-          <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-white p-4 shadow-3d-lg sm:rounded-[2rem] sm:p-5 md:rounded-[2.5rem] md:p-10">
-            {/* Top inner highlight — glass effect */}
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-sand-50 to-transparent"
-              aria-hidden
-            />
-            <SimulatorFlow />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-});
-
-/* ══════════════════════════════════════════════════════════════════
-   MINI ABOUT
-   ══════════════════════════════════════════════════════════════════ */
-
-function MiniAbout() {
-  return (
-    <section
-      id="about"
-      className="relative scroll-mt-20 border-t border-surface-200 bg-surface-50 py-20 md:py-28"
-    >
-      <div className="container-wide">
-        <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-2">
-          <div>
-            <span className="eyebrow">
-              <ShieldCheck className="h-3 w-3" />
-              Body Institut · Paris 18
-            </span>
-            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-forest-800 md:text-5xl">
-              La technologie
-              <br />
-              <span className="text-gradient-brand">qui transforme.</span>
-            </h2>
-            <p className="mt-5 text-base text-forest-700/70 md:text-lg">
-              Cryolipolyse, radiofréquence, pressothérapie — trois protocoles 
-              certifiés, guidés par une approche clinique précise et un 
-              accompagnement individualisé à chaque étape de votre transformation.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <a
-                href={
-                  process.env.NEXT_PUBLIC_BOOKING_URL ??
-                  "https://www.planity.com"
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary"
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-stone-700 mb-1">Nom *</label>
+                  <input
+                    type="text"
+                    value={form.lastName}
+                    onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                    className={`w-full rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 text-sm outline-none focus:ring-2 focus:ring-stone-400 bg-white ${errors.lastName ? "border-red-400" : "border-stone-200"}`}
+                    placeholder="Dupont"
+                  />
+                  {errors.lastName && <p className="text-[11px] text-red-500 mt-1">{errors.lastName}</p>}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-stone-700 mb-1">Téléphone *</label>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                  className={`w-full rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 text-sm outline-none focus:ring-2 focus:ring-stone-400 bg-white ${errors.phone ? "border-red-400" : "border-stone-200"}`}
+                  placeholder="06 12 34 56 78"
+                />
+                {errors.phone && <p className="text-[11px] text-red-500 mt-1">{errors.phone}</p>}
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-stone-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className={`w-full rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 text-sm outline-none focus:ring-2 focus:ring-stone-400 bg-white ${errors.email ? "border-red-400" : "border-stone-200"}`}
+                  placeholder="marie@email.fr"
+                />
+                {errors.email && <p className="text-[11px] text-red-500 mt-1">{errors.email}</p>}
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-stone-700 mb-1">Message (optionnel)</label>
+                <textarea
+                  value={form.message}
+                  onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                  className="w-full rounded-xl border border-stone-200 px-3 sm:px-4 py-2.5 sm:py-3 text-sm outline-none focus:ring-2 focus:ring-stone-400 resize-none bg-white"
+                  rows={3}
+                  placeholder="Votre demande ou question..."
+                />
+              </div>
+              {state === "error" && (
+                <p className="text-xs sm:text-sm text-red-500 text-center">Une erreur est survenue. Veuillez réessayer.</p>
+              )}
+              <button
+                type="submit"
+                disabled={state === "loading"}
+                className="w-full bg-stone-900 text-white font-semibold py-3.5 rounded-xl hover:bg-stone-700 transition-colors disabled:opacity-60 text-sm sm:text-base"
               >
-                <CalendarCheck2 className="h-4 w-4" />
-                Réserver un bilan offert
-              </a>
-              <Link
-                href="/admin"
-                className="btn-ghost"
-                title="Espace administration"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Espace admin
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard value="100%" label="Sur-mesure" />
-            <StatCard value="3" label="Technologies" />
-            <StatCard value="2 000+" label="Bilans réalisés" />
-            <StatCard value="97%" label="Satisfaction" />
-          </div>
+                {state === "loading" ? "Envoi en cours…" : "Envoyer ma demande"}
+              </button>
+            </form>
+          )}
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-function StatCard({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="card-3d flex flex-col justify-between gap-3 p-5 md:p-6">
-      <p className="text-[10px] uppercase tracking-[0.22em] text-sand-600">
-        {label}
-      </p>
-      <p className="text-3xl font-semibold tracking-tight text-forest-800 md:text-4xl">
-        {value}
-      </p>
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-stone-100 py-6 sm:py-8 text-center">
+        <p className="text-xs sm:text-sm text-stone-400">© {new Date().getFullYear()} Body Institut · Paris 18</p>
+        <p className="text-xs text-stone-300 mt-1">Soins minceur sur rendez-vous</p>
+        <a
+          href="/admin"
+          className="mt-4 inline-block text-xs text-stone-300 hover:text-stone-500 transition-colors"
+        >
+          Espace admin
+        </a>
+      </footer>
+
     </div>
   );
 }

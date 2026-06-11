@@ -1,12 +1,7 @@
-/**
- * Edge-compatible auth: HMAC-SHA256 signed session token.
- * No DB session needed (stateless cookie).
- *
- * ENV:
- *   ADMIN_USERNAME   default: admin
- *   ADMIN_PASSWORD   default: bodyinstitut (DEV ONLY — change in prod!)
- *   AUTH_SECRET      32+ char random; if missing, derived from ADMIN_PASSWORD (dev)
- */
+import "server-only";
+import { webcrypto } from "crypto";
+
+const cryptoApi = (globalThis.crypto as typeof webcrypto) ?? webcrypto;
 
 export const COOKIE_NAME = "bi_admin";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
@@ -52,14 +47,14 @@ const enc = new TextEncoder();
 const dec = new TextDecoder();
 
 async function hmac(secret: string, data: string): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey(
+  const key = await cryptoApi.subtle.importKey(
     "raw",
     enc.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign", "verify"]
   );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  const sig = await cryptoApi.subtle.sign("HMAC", key, enc.encode(data));
   return new Uint8Array(sig);
 }
 
