@@ -106,9 +106,6 @@ export default function Home() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/50 to-transparent">
-                <span className="text-white text-[10px] sm:text-xs font-medium">{item.label}</span>
-              </div>
             </div>
           ))}
         </div>
